@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Items &amp; Prices · ROB RUN Tools</title>
-<meta name="description" content="Every ROB RUN item and what it goes for.">
-<meta property="og:title" content="ROB RUN Items &amp; Prices">
-<meta property="og:description" content="Every item in the game and what it goes for.">
+<title>Price Check · ROB RUN Tools</title>
+<meta name="description" content="Look up what a ROB RUN item is worth.">
+<meta property="og:title" content="ROB RUN Price Check">
+<meta property="og:description" content="Look up what an item is worth before you sell it.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,36 +15,30 @@
 <link rel="stylesheet" href="../assets/site.css">
 <style>
 .head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-.tools-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
-.tools-row .search { flex: 1 1 240px; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.filter {
-  height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: transparent;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.lookup { display: grid; gap: 10px; padding: 18px; border-bottom: 1px solid var(--line); }
+#q { height: 52px; font-size: 20px; }
+.cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.chipbtn {
+  height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
 }
-.filter:disabled { opacity: 0.55; cursor: not-allowed; }
-.filter.on { border-color: rgba(240, 180, 41, 0.45); color: var(--accent); }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 11px 18px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
+.chipbtn:hover { color: var(--text); border-color: var(--muted); }
+.chipbtn[aria-pressed="true"] { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); }
+.results { list-style: none; margin: 0; padding: 0; }
+.results li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
+  padding: 12px 18px; border-bottom: 1px solid var(--line);
 }
-th.r, td.r { text-align: right; }
-td.empty { padding: 26px 18px; color: var(--muted); white-space: normal; border-bottom: 0; }
+.results li:last-child { border-bottom: 0; }
+.results .nm { font-weight: 500; }
+.results .meta { font-size: 13px; color: var(--muted); }
+.results .price { font-family: var(--font-mono); font-size: 18px; color: var(--accent); font-variant-numeric: tabular-nums; text-align: right; }
+.results .price small { display: block; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.count { margin: 0; padding: 10px 18px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
+.empty { padding: 22px 18px; margin: 0; color: var(--muted); }
+.wip-body { display: grid; gap: 12px; }
+.src { margin: 0; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -53,8 +47,9 @@ td.empty { padding: 26px 18px; color: var(--muted); white-space: normal; border-
     <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
     <div class="nav-links">
       <a href="../split/">Split</a>
-      <a href="../upgrades/">Upgrades <span class="soon">Soon</span></a>
-      <a href="./" aria-current="page">Items <span class="soon">Soon</span></a>
+      <a href="../upgrades/">Unlocks</a>
+      <a href="./" aria-current="page">Prices</a>
+      <a href="../faq/">FAQ</a>
     </div>
   </div>
 </nav>
@@ -62,43 +57,90 @@ td.empty { padding: 26px 18px; color: var(--muted); white-space: normal; border-
 <main class="page">
   <header class="page-head">
     <div class="head-row">
-      <h1>Items &amp; prices</h1>
-      <span class="tag accent">Under construction</span>
+      <h1>Price check</h1>
+      <span class="tag accent" id="wipTag" hidden>Under construction</span>
     </div>
-    <p class="sub">Every item in the game and what it goes for. Search it, sort it, check a price before you buy.</p>
+    <p class="sub">Type an item, see what it's worth.</p>
   </header>
 
-  <section class="panel wip" style="padding: 6px 0 0" aria-label="Item list preview">
-    <div class="tools-row">
-      <div class="search">
-        <label for="q" style="position:absolute;left:-9999px">Search items</label>
-        <input type="search" id="q" disabled placeholder="Search items">
-      </div>
-      <div class="filters" aria-label="Categories">
-        <button type="button" class="filter on" disabled>All</button>
-        <button type="button" class="filter" disabled>Vehicles</button>
-        <button type="button" class="filter" disabled>Tools</button>
-        <button type="button" class="filter" disabled>Base</button>
-      </div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th scope="col">Item</th><th scope="col">Type</th><th scope="col">Tier</th><th scope="col" class="r">Price</th></tr>
-        </thead>
-        <tbody>
-          <tr><td class="empty" colspan="4">We're still putting the price list together. Check back soon.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <div id="app"><p class="empty">Loading prices...</p></div>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
+    <span>Prices move with patches and Notoriety. Treat these as a guide.</span>
     <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
-    <span><a href="../split/">Split calculator</a> is live now.</span>
   </div>
 </footer>
+
+<template id="wipTpl">
+  <section class="panel wip">
+    <div class="wip-body">
+      <p class="wip-note">We're still putting the price list together. Once it's in, you'll type an item and see what it goes for.</p>
+      <input type="search" disabled placeholder="Search items" aria-label="Search items (coming soon)">
+    </div>
+  </section>
+</template>
+
+<script>
+(function () {
+  "use strict";
+  var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  var app = document.getElementById("app");
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+  function showWip(note) {
+    document.getElementById("wipTag").hidden = false;
+    app.innerHTML = "";
+    app.appendChild(document.getElementById("wipTpl").content.cloneNode(true));
+    if (note) { var p = document.createElement("p"); p.className = "src"; p.style.marginTop = "12px"; p.textContent = note; app.appendChild(p); }
+  }
+
+  fetch("../data/items.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) { if (!d || !Array.isArray(d.items) || !d.items.length) showWip(); else mount(d); })
+    .catch(function () { showWip("Couldn't load prices. Refresh to try again."); });
+
+  function mount(d) {
+    var items = d.items.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var cats = [];
+    items.forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
+    cats.sort();
+    var cat = "";
+    app.innerHTML =
+      '<section class="panel">' +
+      '<div class="lookup">' +
+      '<label for="q" style="position:absolute;left:-9999px">Search items</label>' +
+      '<input type="search" id="q" placeholder="Search items, e.g. laptop" autocomplete="off" spellcheck="false">' +
+      '<div class="cats" id="cats"><button type="button" class="chipbtn" data-cat="" aria-pressed="true">All</button>' +
+      cats.map(function (c) { return '<button type="button" class="chipbtn" data-cat="' + esc(c) + '" aria-pressed="false">' + esc(c) + "</button>"; }).join("") +
+      "</div></div>" +
+      '<ul class="results" id="results"></ul>' +
+      '<p class="count" id="count"></p></section>' +
+      (d.updated || d.source ? '<p class="src" style="margin-top:12px">' + (d.updated ? "Last checked " + esc(d.updated) + ". " : "") + (d.source ? "Source: " + esc(d.source) + "." : "") + "</p>" : "");
+    var q = document.getElementById("q"), res = document.getElementById("results"), count = document.getElementById("count"), catsEl = document.getElementById("cats");
+    function render() {
+      var term = q.value.trim().toLowerCase();
+      var list = items.filter(function (it) {
+        return (!cat || it.category === cat) && (!term || it.name.toLowerCase().indexOf(term) >= 0 || (it.category || "").toLowerCase().indexOf(term) >= 0);
+      });
+      res.innerHTML = list.slice(0, 200).map(function (it) {
+        return '<li><div><div class="nm">' + esc(it.name) + '</div><div class="meta">' + esc(it.category || "") + (it.note ? " · " + esc(it.note) : "") + "</div></div>" +
+          '<div class="price">' + (it.price > 0 ? "$" + fmt.format(it.price) : "–") + (it.priceLabel ? "<small>" + esc(it.priceLabel) + "</small>" : "") + "</div></li>";
+      }).join("") || '<li class="empty">Nothing matches that.</li>';
+      count.textContent = list.length + (list.length === 1 ? " item" : " items") + (list.length > 200 ? " (showing 200)" : "");
+    }
+    q.addEventListener("input", render);
+    catsEl.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-cat]"); if (!b) return;
+      cat = b.getAttribute("data-cat");
+      [].forEach.call(catsEl.children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+      render();
+    });
+    render();
+    try { if (window.matchMedia("(pointer: fine)").matches) q.focus(); } catch (e) { /* ignore */ }
+  }
+})();
+</script>
 </body>
 </html>

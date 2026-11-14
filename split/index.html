@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Split Calculator · ROB RUN Tools</title>
-<meta name="description" content="Split each ROB RUN take with your crew and keep track of your cut.">
+<meta name="description" content="Split each ROB RUN take with your crew, track your cut, averages and cash per hour across the wipe.">
 <meta property="og:title" content="ROB RUN Split Calculator">
-<meta property="og:description" content="Split each run with your crew and keep track of your cut.">
+<meta property="og:description" content="Split each run with your crew. Tracks your cut, averages, best run and cash per hour.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,179 +15,132 @@
 <link rel="stylesheet" href="../assets/site.css">
 <style>
 /* Add-run bar */
-.addbar { padding: 18px; display: grid; gap: 10px; }
-.addbar form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
-.addbar .grow { flex: 1 1 220px; }
-.addbar #take { height: 52px; font-size: 20px; }
+.addbar { padding: 18px; display: grid; gap: 12px; }
+.addbar form { display: grid; gap: 12px; }
+.add-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
+.add-row .grow { flex: 1 1 220px; }
+#take { height: 52px; font-size: 20px; }
 .addbar .btn.primary { height: 52px; padding: 0 26px; font-size: 15px; }
+.extra-row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; }
+.extra-row .field { flex: 1 1 180px; max-width: 260px; }
+.extra-row input { height: 38px; font-size: 14px; }
 .stepper {
-  display: flex;
-  align-items: center;
-  height: 52px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--field);
+  display: flex; align-items: center; height: 52px;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--field);
 }
 .stepper button {
-  width: 42px;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
+  width: 42px; height: 100%; border: 0; background: transparent;
+  color: var(--text); font-size: 20px; line-height: 1; cursor: pointer;
 }
 .stepper button:hover { color: var(--accent); }
 .stepper button:disabled { opacity: 0.3; cursor: default; color: var(--text); }
 .stepper output { min-width: 34px; text-align: center; font-family: var(--font-mono); font-size: 17px; }
 .each-wrap { flex: 0 1 170px; }
 .each {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
+  height: 52px; display: flex; align-items: center;
+  font-family: var(--font-mono); font-size: 22px; font-weight: 500;
+  color: var(--accent); font-variant-numeric: tabular-nums;
 }
 .each.empty { color: var(--muted); font-size: 18px; }
 .hint { margin: 0; font-size: 13px; color: var(--muted); }
 .hint.bad { color: var(--bad); }
 
 /* Stats */
-.stats {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
-}
-.stat {
-  display: grid;
-  gap: 6px;
-  align-content: start;
-  padding: 16px 18px;
-  border-left: 1px solid var(--line);
-}
+.stats { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(4, minmax(0, 1fr)); }
+.stat { display: grid; gap: 6px; align-content: start; padding: 16px 18px; border-left: 1px solid var(--line); }
 .stat:first-child { border-left: 0; }
 .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.big {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 46px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.val {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
-  font-variant-numeric: tabular-nums;
-}
+.big { font-family: var(--font-display); font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
+.val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .val.ok { color: var(--good); }
-.stat[hidden] { display: none; }
-.progress {
+.val small { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.goal-row {
   grid-column: 1 / -1;
-  padding: 26px 18px 30px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   border-top: 1px solid var(--line);
-  position: relative;
 }
+.goal-row .stat { flex: 0 0 160px; border-left: 0; padding-right: 8px; }
+.goal-row .progress { flex: 1 1 260px; }
+.progress { position: relative; padding: 24px 18px 28px 8px; }
 .bar { position: relative; height: 10px; border-radius: 2px; background: var(--field); }
-.fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0;
-  border-radius: 2px;
-  background: var(--accent);
-  transition: width 250ms ease;
-}
+.fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 2px; background: var(--accent); transition: width 250ms ease; }
 .fill.done { background: var(--good); }
 .mark { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--text); }
 .mark.pay { background: var(--muted); }
 .mark-label {
-  position: absolute;
-  left: 18px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
+  position: absolute; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap;
 }
-.mark-label.above { top: 6px; }
-.mark-label.below { bottom: 8px; color: var(--text); }
-.bar-wrap { position: relative; margin: 0; }
+.mark-label.above { top: 4px; }
+.mark-label.below { bottom: 6px; color: var(--text); }
 
-/* Log + settings */
+/* Log + side */
 .cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.stack > .panel { min-width: 0; }
 .log-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font-size: 13px; color: var(--muted); }
 .log-tools [hidden] { display: none; }
-.example-note { color: var(--muted); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { padding: 11px 14px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
-th {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-th:first-child, td:first-child { text-align: left; padding-left: 18px; width: 48px; color: var(--muted); }
+th, td { padding: 10px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+th:first-child, td:first-child { text-align: left; padding-left: 18px; color: var(--muted); }
+th.l, td.l { text-align: left; }
 td { font-family: var(--font-mono); font-size: 14px; }
 td.cut { color: var(--accent); }
-td.crew { color: var(--muted); }
+td.dim { color: var(--muted); }
 td.rm { width: 44px; padding: 4px 10px 4px 0; }
 tbody tr:hover { background: #1a1d22; }
 tfoot td { border-bottom: 0; color: var(--text); font-weight: 500; }
 tfoot td:first-child { color: var(--text); font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; }
+.type-pill {
+  display: inline-block; padding: 1px 7px; border: 1px solid var(--line); border-radius: 2px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text);
+}
 .chip {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 1px 6px;
-  border: 1px solid rgba(76, 195, 138, 0.45);
-  border-radius: 2px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--good);
-  vertical-align: 1px;
+  display: inline-block; margin-left: 8px; padding: 1px 6px;
+  border: 1px solid rgba(76, 195, 138, 0.45); border-radius: 2px;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--good); vertical-align: 1px;
 }
 .chip.pay { border-color: var(--line); color: var(--muted); }
+.chip.best { border-color: rgba(240, 180, 41, 0.45); color: var(--accent); }
 .x {
-  width: 30px; height: 30px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
+  width: 30px; height: 30px; border: 1px solid transparent; border-radius: 3px;
+  background: transparent; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer;
 }
 .x:hover { border-color: var(--line); color: var(--bad); }
 .empty-log { margin: 0; padding: 22px 18px; color: var(--muted); }
-.empty-log[hidden] { display: none; }
+.empty-log[hidden], .panel[hidden] { display: none; }
 
 .settings { display: grid; gap: 16px; padding: 18px; }
-.settings .hint { margin-top: -2px; }
 .settings .hint:empty { display: none; }
 .settings .row { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
 .copy-msg { font-size: 13px; color: var(--muted); }
+.copy-msg:empty { display: none; }
 #copyFallback { width: 100%; min-height: 110px; background: var(--field); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 10px; font-family: var(--font-mono); font-size: 13px; }
 #copyFallback[hidden] { display: none; }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
 
+@media (max-width: 980px) {
+  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .stat.main { grid-column: 1 / -1; border-bottom: 1px solid var(--line); }
+  .stats > .stat:nth-child(2) { border-left: 0; }
+}
 @media (max-width: 860px) {
   .cols { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .stat.main { grid-column: 1 / -1; border-bottom: 1px solid var(--line); }
-  .stat:nth-child(2) { border-left: 0; }
-  .stat[hidden] + .stat { border-left: 1px solid var(--line); }
+  .stats > .stat:nth-child(4) { border-left: 0; }
+  .stats > .stat:nth-child(2), .stats > .stat:nth-child(3) { border-bottom: 1px solid var(--line); }
+  .goal-row .stat { flex: 1 1 30%; }
+  .goal-row .progress { flex: 1 1 100%; padding-left: 18px; }
   .big { font-size: 40px; }
   .addbar .btn.primary { flex: 1 1 100%; }
   .each-wrap { flex: 1 1 120px; }
+  .extra-row .field { max-width: none; }
 }
 </style>
 </head>
@@ -197,8 +150,9 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
     <div class="nav-links">
       <a href="./" aria-current="page">Split</a>
-      <a href="../upgrades/">Upgrades <span class="soon">Soon</span></a>
-      <a href="../items/">Items <span class="soon">Soon</span></a>
+      <a href="../upgrades/">Unlocks</a>
+      <a href="../items/">Prices</a>
+      <a href="../faq/">FAQ</a>
     </div>
   </div>
 </nav>
@@ -206,30 +160,43 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
 <main class="page">
   <header class="page-head">
     <h1>Split calculator</h1>
-    <p class="sub">Put in what the crew made on a run. It splits it and keeps a running total of your cut.</p>
+    <p class="sub">Put in what the crew made on a run. It splits it, keeps a running total of your cut, and shows your averages for the wipe.</p>
   </header>
 
   <section class="panel addbar" aria-label="Add a run">
     <form id="addForm" novalidate>
-      <div class="field grow">
-        <label for="take">Run take</label>
-        <input type="text" id="take" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 280k">
+      <div class="add-row">
+        <div class="field grow">
+          <label for="take">Run take</label>
+          <input type="text" id="take" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 280k">
+        </div>
+        <div class="field">
+          <span class="label" id="crewLabel">Split</span>
+          <div class="stepper" role="group" aria-labelledby="crewLabel">
+            <button type="button" id="crewMinus" aria-label="One less person">−</button>
+            <output id="crewOut" aria-live="polite">3</output>
+            <button type="button" id="crewPlus" aria-label="One more person">+</button>
+          </div>
+        </div>
+        <div class="field each-wrap">
+          <span class="label">Each gets</span>
+          <output id="each" class="each empty">–</output>
+        </div>
+        <button type="submit" class="btn primary">Add run</button>
       </div>
-      <div class="field">
-        <span class="label" id="crewLabel">Split</span>
-        <div class="stepper" role="group" aria-labelledby="crewLabel">
-          <button type="button" id="crewMinus" aria-label="One less person">−</button>
-          <output id="crewOut" aria-live="polite">3</output>
-          <button type="button" id="crewPlus" aria-label="One more person">+</button>
+      <div class="extra-row">
+        <div class="field">
+          <label for="costs">Costs off the top (optional)</label>
+          <input type="text" id="costs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="ammo, decoders, gear">
+        </div>
+        <div class="field">
+          <label for="type">What you hit (optional)</label>
+          <input type="text" id="type" list="typeList" autocomplete="off" spellcheck="false" placeholder="Store, bank, cargo...">
+          <datalist id="typeList"></datalist>
         </div>
       </div>
-      <div class="field each-wrap">
-        <span class="label">Each gets</span>
-        <output id="each" class="each empty">–</output>
-      </div>
-      <button type="submit" class="btn primary">Add run</button>
     </form>
-    <p class="hint" id="takeMsg">Works with 280k, 1.2m or 280,000.</p>
+    <p class="hint" id="takeMsg">Works with 280k, 1.2m or 280,000. Press Enter to add.</p>
   </section>
 
   <section class="panel stats" aria-label="Your totals">
@@ -237,40 +204,68 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       <div class="stat-top"><span class="label">Your cut</span><span class="tag" id="status">No runs</span></div>
       <span class="big" id="total" aria-live="polite">0</span>
     </div>
-    <div class="stat"><span class="label">To goal</span><span class="val" id="leftGoal">0</span></div>
-    <div class="stat" id="payStat"><span class="label">To pay back</span><span class="val" id="leftPay">0</span></div>
-    <div class="stat"><span class="label">Runs to go</span><span class="val" id="runsLeft">–</span></div>
-    <div class="progress">
-      <span class="mark-label above" id="payLabel"></span>
-      <div class="bar" role="progressbar" id="bar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="fill" id="fill"></div>
-        <div class="mark pay" id="payMark"></div>
-        <div class="mark" id="goalMark"></div>
+    <div class="stat"><span class="label">Runs</span><span class="val" id="runCount">0</span></div>
+    <div class="stat"><span class="label">Avg cut / run</span><span class="val" id="avgCut">–</span></div>
+    <div class="stat"><span class="label">Best run</span><span class="val" id="bestRun">–</span></div>
+    <div class="stat"><span class="label">Per hour</span><span class="val" id="perHour">–</span></div>
+    <div class="goal-row">
+      <div class="stat"><span class="label">To goal</span><span class="val" id="leftGoal">0</span></div>
+      <div class="stat" id="payStat"><span class="label">To pay back</span><span class="val" id="leftPay">0</span></div>
+      <div class="stat"><span class="label">Runs to go</span><span class="val" id="runsLeft">–</span></div>
+      <div class="progress">
+        <span class="mark-label above" id="payLabel"></span>
+        <div class="bar" role="progressbar" id="bar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="fill" id="fill"></div>
+          <div class="mark pay" id="payMark"></div>
+          <div class="mark" id="goalMark"></div>
+        </div>
+        <span class="mark-label below" id="goalLabel"></span>
       </div>
-      <span class="mark-label below" id="goalLabel"></span>
     </div>
   </section>
 
   <div class="cols">
-    <section class="panel" aria-labelledby="logTitle">
-      <div class="panel-head">
-        <h2 class="panel-title" id="logTitle">Runs</h2>
-        <div class="log-tools">
-          <span id="exampleNote" class="example-note" hidden>Example runs. They clear when you add your own. <button type="button" class="linkish" id="startEmpty">Clear now</button></span>
-          <span id="undoWrap" hidden>Removed run <span id="undoNum"></span>. <button type="button" class="linkish" id="undoBtn">Undo</button></span>
+    <div class="stack">
+      <section class="panel" aria-labelledby="logTitle">
+        <div class="panel-head">
+          <h2 class="panel-title" id="logTitle">Runs this wipe</h2>
+          <div class="log-tools">
+            <span id="exampleNote" hidden>Example runs. They clear when you add your own. <button type="button" class="linkish" id="startEmpty">Clear now</button></span>
+            <span id="undoWrap" hidden>Removed run <span id="undoNum"></span>. <button type="button" class="linkish" id="undoBtn">Undo</button></span>
+          </div>
         </div>
-      </div>
-      <div class="table-wrap">
-        <table id="logTable">
-          <thead>
-            <tr><th scope="col">#</th><th scope="col">Take</th><th scope="col">Split</th><th scope="col">Your cut</th><th scope="col">Total</th><th scope="col"><span style="position:absolute;left:-9999px">Remove</span></th></tr>
-          </thead>
-          <tbody id="logBody"></tbody>
-          <tfoot id="logFoot"></tfoot>
-        </table>
-      </div>
-      <p id="emptyLog" class="empty-log" hidden>No runs yet. Add one above.</p>
-    </section>
+        <div class="table-wrap">
+          <table id="logTable">
+            <thead>
+              <tr><th scope="col">#</th><th scope="col" class="l">Time</th><th scope="col" class="l">Hit</th><th scope="col">Take</th><th scope="col">Costs</th><th scope="col">Split</th><th scope="col">Your cut</th><th scope="col">Total</th><th scope="col"><span style="position:absolute;left:-9999px">Remove</span></th></tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+            <tfoot id="logFoot"></tfoot>
+          </table>
+        </div>
+        <p id="emptyLog" class="empty-log" hidden>No runs yet. Add one above.</p>
+      </section>
+
+      <section class="panel" id="typePanel" aria-labelledby="typeTitle" hidden>
+        <div class="panel-head"><h2 class="panel-title" id="typeTitle">What pays best</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Hit</th><th scope="col">Runs</th><th scope="col">Avg take</th><th scope="col">Avg cut</th><th scope="col">Best cut</th></tr></thead>
+            <tbody id="typeBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" id="wipePanel" aria-labelledby="wipeTitle" hidden>
+        <div class="panel-head"><h2 class="panel-title" id="wipeTitle">Past wipes</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Ended</th><th scope="col">Runs</th><th scope="col">Crew take</th><th scope="col">Your cut</th><th scope="col">Avg cut</th></tr></thead>
+            <tbody id="wipeBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
 
     <aside class="panel settings" aria-labelledby="goalTitle">
       <h2 class="panel-title" id="goalTitle">Goal</h2>
@@ -284,12 +279,19 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
         <input type="text" id="pay" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0">
         <p class="hint" id="payHint"></p>
       </div>
+      <div class="field">
+        <label for="fee">Laundering fee % (optional)</label>
+        <input type="text" id="fee" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0">
+        <p class="hint" id="feeHint"></p>
+      </div>
       <div class="row">
         <button type="button" id="copyBtn" class="btn small">Copy for Discord</button>
+        <button type="button" id="wipeBtn" class="btn small">New wipe</button>
         <button type="button" id="clearBtn" class="btn small">Clear runs</button>
       </div>
       <span id="copyMsg" class="copy-msg" role="status"></span>
       <textarea id="copyFallback" readonly hidden aria-label="Summary to copy"></textarea>
+      <p class="note">New wipe saves this wipe's totals under Past wipes and starts fresh. Servers wipe every 7 days.</p>
     </aside>
   </div>
 </main>
@@ -306,20 +308,24 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
   "use strict";
   var KEY = "robrun-split-v1";
   var MIN_CREW = 1, MAX_CREW = 12;
+  var SESSION_GAP = 3 * 3600 * 1000;
+  var BASE_TYPES = ["Store", "Diner", "House", "Bank", "Gallery", "Cargo", "Police shift"];
   var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   var compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
 
   function exampleState() {
+    var now = Date.now(), m = 60000;
     return {
-      goal: 1000000, pay: 0, crew: 3, example: true, nextId: 4,
+      goal: 1000000, pay: 0, fee: 0, crew: 3, example: true, nextId: 4, wipes: [],
       runs: [
-        { id: 1, take: 280000, crew: 3 },
-        { id: 2, take: 525000, crew: 3 },
-        { id: 3, take: 789000, crew: 3 }
+        { id: 1, take: 280000, crew: 3, costs: 0, type: "Store", t: now - 70 * m },
+        { id: 2, take: 525000, crew: 3, costs: 15000, type: "Diner", t: now - 45 * m },
+        { id: 3, take: 789000, crew: 3, costs: 30000, type: "Bank", t: now - 15 * m }
       ]
     };
   }
   function clampCrew(n) { return Math.max(MIN_CREW, Math.min(MAX_CREW, Math.round(n))); }
+  function num(v, d) { v = Number(v); return isFinite(v) && v >= 0 ? v : d; }
 
   function parseAmount(raw) {
     var s = String(raw == null ? "" : raw).trim().toLowerCase().replace(/[\s,$_]/g, "");
@@ -338,60 +344,110 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       if (raw) {
         var o = JSON.parse(raw);
         if (o && Array.isArray(o.runs)) {
-          o.goal = Number(o.goal) > 0 ? Number(o.goal) : 1000000;
-          o.pay = Number(o.pay) > 0 ? Number(o.pay) : 0;
-          o.crew = clampCrew(Number(o.crew) || 3);
+          o.goal = num(o.goal, 0) > 0 ? Number(o.goal) : 1000000;
+          o.pay = num(o.pay, 0);
+          o.fee = Math.min(100, num(o.fee, 0));
+          o.crew = clampCrew(num(o.crew, 3) || 3);
           o.runs = o.runs.filter(function (r) { return r && Number(r.take) > 0; }).map(function (r, i) {
-            return { id: Number(r.id) || i + 1, take: Number(r.take), crew: clampCrew(Number(r.crew) || 3) };
+            return {
+              id: Number(r.id) || i + 1, take: Number(r.take), crew: clampCrew(num(r.crew, 3) || 3),
+              costs: num(r.costs, 0), type: typeof r.type === "string" ? r.type.slice(0, 40) : "",
+              t: Number(r.t) || 0
+            };
           });
-          o.nextId = Math.max(Number(o.nextId) || 1, o.runs.reduce(function (m, r) { return Math.max(m, r.id + 1); }, 1));
+          o.wipes = Array.isArray(o.wipes) ? o.wipes.filter(function (w) { return w && typeof w === "object"; }) : [];
+          o.nextId = Math.max(Number(o.nextId) || 1, o.runs.reduce(function (mx, r) { return Math.max(mx, r.id + 1); }, 1));
           o.example = !!o.example;
           return o;
         }
       }
-    } catch (e) { /* no storage: start from examples */ }
+    } catch (e) { /* no storage */ }
     return exampleState();
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
 
+  function cutOf(run, fee) {
+    var net = Math.max(0, run.take - (run.costs || 0));
+    return (net / run.crew) * (1 - (fee || 0) / 100);
+  }
+
   function compute(s) {
-    var running = 0, crewTake = 0, rows = [], payHitAt = -1, goalHitAt = -1;
+    var running = 0, crewTake = 0, rows = [], payHitAt = -1, goalHitAt = -1, bestIdx = -1, bestCut = -1;
     s.runs.forEach(function (r, i) {
-      var cut = r.take / r.crew;
-      var before = running;
+      var cut = cutOf(r, s.fee), before = running;
       running += cut;
       crewTake += r.take;
       if (s.pay > 0 && before < s.pay && running >= s.pay) payHitAt = i;
       if (before < s.goal && running >= s.goal) goalHitAt = i;
+      if (cut > bestCut) { bestCut = cut; bestIdx = i; }
       rows.push({ run: r, cut: cut, running: running });
     });
     var n = s.runs.length, avg = n ? running / n : 0;
     var leftGoal = Math.max(0, s.goal - running);
+
+    // Per hour over the latest session (runs less than 3h apart). Skips the first run of the session,
+    // since we only know when it ended, not when it started.
+    var perHour = null;
+    var timed = rows.filter(function (r) { return r.run.t > 0; });
+    if (timed.length >= 2) {
+      var start = timed.length - 1;
+      while (start > 0 && timed[start].run.t - timed[start - 1].run.t <= SESSION_GAP) start--;
+      var sess = timed.slice(start);
+      var span = sess[sess.length - 1].run.t - sess[0].run.t;
+      if (sess.length >= 2 && span >= 120000) {
+        var earned = 0;
+        for (var j = 1; j < sess.length; j++) earned += sess[j].cut;
+        perHour = { rate: earned / (span / 3600000), runs: sess.length };
+      }
+    }
+
+    var types = {};
+    rows.forEach(function (row) {
+      var k = (row.run.type || "").trim();
+      if (!k) return;
+      var key = k.toLowerCase();
+      if (!types[key]) types[key] = { name: k, runs: 0, take: 0, cut: 0, best: 0 };
+      var g = types[key];
+      g.runs++; g.take += row.run.take; g.cut += row.cut; g.best = Math.max(g.best, row.cut);
+    });
+    var typeList = Object.keys(types).map(function (k) { return types[k]; })
+      .sort(function (a, b) { return b.cut / b.runs - a.cut / a.runs; });
+
     return {
       rows: rows, total: running, crewTake: crewTake, n: n, avg: avg,
       leftGoal: leftGoal, leftPay: Math.max(0, s.pay - running),
       runsLeft: leftGoal === 0 ? 0 : (avg > 0 ? Math.ceil(leftGoal / avg) : null),
-      payHitAt: payHitAt, goalHitAt: goalHitAt
+      payHitAt: payHitAt, goalHitAt: goalHitAt, bestIdx: bestIdx, bestCut: bestCut,
+      perHour: perHour, types: typeList
     };
   }
 
   var state = load();
-  var lastRemoved = null, clearTimer = null;
+  var lastRemoved = null, armTimers = {};
   var $ = function (id) { return document.getElementById(id); };
   var el = {
-    take: $("take"), takeMsg: $("takeMsg"), addForm: $("addForm"),
+    take: $("take"), costs: $("costs"), type: $("type"), typeList: $("typeList"), takeMsg: $("takeMsg"), addForm: $("addForm"),
     crewMinus: $("crewMinus"), crewPlus: $("crewPlus"), crewOut: $("crewOut"), each: $("each"),
-    status: $("status"), total: $("total"), leftGoal: $("leftGoal"), leftPay: $("leftPay"), payStat: $("payStat"),
-    runsLeft: $("runsLeft"), fill: $("fill"), bar: $("bar"), payMark: $("payMark"), goalMark: $("goalMark"),
-    payLabel: $("payLabel"), goalLabel: $("goalLabel"),
+    status: $("status"), total: $("total"), runCount: $("runCount"), avgCut: $("avgCut"), bestRun: $("bestRun"), perHour: $("perHour"),
+    leftGoal: $("leftGoal"), leftPay: $("leftPay"), payStat: $("payStat"), runsLeft: $("runsLeft"),
+    fill: $("fill"), bar: $("bar"), payMark: $("payMark"), goalMark: $("goalMark"), payLabel: $("payLabel"), goalLabel: $("goalLabel"),
     exampleNote: $("exampleNote"), startEmpty: $("startEmpty"), undoWrap: $("undoWrap"), undoNum: $("undoNum"), undoBtn: $("undoBtn"),
     logTable: $("logTable"), logBody: $("logBody"), logFoot: $("logFoot"), emptyLog: $("emptyLog"),
-    goal: $("goal"), goalHint: $("goalHint"), pay: $("pay"), payHint: $("payHint"),
-    copyBtn: $("copyBtn"), clearBtn: $("clearBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback")
+    typePanel: $("typePanel"), typeBody: $("typeBody"), wipePanel: $("wipePanel"), wipeBody: $("wipeBody"),
+    goal: $("goal"), goalHint: $("goalHint"), pay: $("pay"), payHint: $("payHint"), fee: $("fee"), feeHint: $("feeHint"),
+    copyBtn: $("copyBtn"), wipeBtn: $("wipeBtn"), clearBtn: $("clearBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback")
   };
 
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function timeOf(t) {
+    if (!t) return "–";
+    var d = new Date(t), now = new Date();
+    var hm = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (d.toDateString() === now.toDateString()) return hm;
+    return d.toLocaleDateString([], { weekday: "short" }) + " " + hm;
+  }
   function placeLabel(label, pct) {
-    label.style.left = "calc(18px + (100% - 36px) * " + (pct / 100) + ")";
+    label.style.left = "calc(8px + (100% - 26px) * " + (pct / 100) + ")";
     label.style.transform = pct > 75 ? "translateX(-100%)" : (pct < 15 ? "none" : "translateX(-50%)");
   }
 
@@ -404,6 +460,11 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     else if (c.total >= state.goal) { el.status.textContent = "Goal hit"; el.status.className = "tag good"; }
     else if (state.pay > 0 && c.total >= state.pay) { el.status.textContent = "Paid back"; el.status.className = "tag good"; }
     else { el.status.textContent = Math.floor(pctGoal) + "% of goal"; el.status.className = "tag accent"; }
+
+    el.runCount.textContent = String(c.n);
+    el.avgCut.textContent = c.n ? fmt.format(c.avg) : "–";
+    el.bestRun.innerHTML = c.n ? fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? "<small>" + esc(c.rows[c.bestIdx].run.type) + "</small>" : "") : "–";
+    el.perHour.innerHTML = c.perHour ? fmt.format(c.perHour.rate) + "<small>last " + c.perHour.runs + " runs</small>" : "–";
 
     el.leftGoal.textContent = c.leftGoal === 0 ? "Done" : fmt.format(c.leftGoal);
     el.leftGoal.classList.toggle("ok", c.leftGoal === 0);
@@ -426,81 +487,112 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       el.payMark.style.left = "calc(" + payPct + "% - 1px)";
       el.payLabel.textContent = "Pay back " + compact.format(state.pay);
       placeLabel(el.payLabel, payPct);
-    } else {
-      el.payMark.hidden = true; el.payLabel.hidden = true;
-    }
+    } else { el.payMark.hidden = true; el.payLabel.hidden = true; }
 
     el.crewOut.textContent = String(state.crew);
     el.crewMinus.disabled = state.crew <= MIN_CREW;
     el.crewPlus.disabled = state.crew >= MAX_CREW;
     updateEach();
 
+    // type suggestions
+    var seen = {}, opts = [];
+    state.runs.concat(BASE_TYPES.map(function (t) { return { type: t }; })).forEach(function (r) {
+      var t = (r.type || "").trim(); if (t && !seen[t.toLowerCase()]) { seen[t.toLowerCase()] = 1; opts.push(t); }
+    });
+    el.typeList.innerHTML = opts.map(function (t) { return '<option value="' + esc(t) + '">'; }).join("");
+
     el.exampleNote.hidden = !(state.example && c.n);
     el.logBody.textContent = "";
     c.rows.forEach(function (row, i) {
       var tr = document.createElement("tr");
-      var chip = i === c.goalHitAt ? '<span class="chip">Goal</span>' : (i === c.payHitAt ? '<span class="chip pay">Paid back</span>' : "");
+      var chips = "";
+      if (i === c.goalHitAt) chips += '<span class="chip">Goal</span>';
+      else if (i === c.payHitAt) chips += '<span class="chip pay">Paid back</span>';
       tr.innerHTML =
         "<td>" + (i + 1) + "</td>" +
+        '<td class="l dim">' + timeOf(row.run.t) + "</td>" +
+        '<td class="l">' + (row.run.type ? '<span class="type-pill">' + esc(row.run.type) + "</span>" : '<span class="dim">–</span>') + "</td>" +
         "<td>" + fmt.format(row.run.take) + "</td>" +
-        '<td class="crew">÷' + row.run.crew + "</td>" +
-        '<td class="cut">' + fmt.format(row.cut) + "</td>" +
-        "<td>" + fmt.format(row.running) + chip + "</td>" +
+        '<td class="dim">' + (row.run.costs ? "−" + fmt.format(row.run.costs) : "–") + "</td>" +
+        '<td class="dim">÷' + row.run.crew + "</td>" +
+        '<td class="cut">' + fmt.format(row.cut) + (i === c.bestIdx && c.n > 1 ? '<span class="chip best">Best</span>' : "") + "</td>" +
+        "<td>" + fmt.format(row.running) + chips + "</td>" +
         '<td class="rm"><button type="button" class="x" data-id="' + row.run.id + '" aria-label="Remove run ' + (i + 1) + '">×</button></td>';
       el.logBody.appendChild(tr);
     });
+    var costsTotal = state.runs.reduce(function (s, r) { return s + (r.costs || 0); }, 0);
     el.logFoot.innerHTML = c.n
-      ? "<tr><td>Total</td><td>" + fmt.format(c.crewTake) + '</td><td></td><td class="cut">' + fmt.format(c.total) + "</td><td></td><td></td></tr>"
+      ? "<tr><td>Total</td><td></td><td></td><td>" + fmt.format(c.crewTake) + '</td><td class="dim">' + (costsTotal ? "−" + fmt.format(costsTotal) : "–") + '</td><td></td><td class="cut">' + fmt.format(c.total) + "</td><td></td><td></td></tr>"
       : "";
     el.logTable.hidden = !c.n;
     el.emptyLog.hidden = !!c.n;
     el.clearBtn.disabled = !c.n;
+    el.wipeBtn.disabled = !c.n || state.example;
+
+    el.typePanel.hidden = !c.types.length;
+    el.typeBody.innerHTML = c.types.map(function (g) {
+      return '<tr><td><span class="type-pill">' + esc(g.name) + "</span></td><td>" + g.runs + "</td><td>" + fmt.format(g.take / g.runs) +
+        '</td><td class="cut">' + fmt.format(g.cut / g.runs) + "</td><td>" + fmt.format(g.best) + "</td></tr>";
+    }).join("");
+
+    el.wipePanel.hidden = !state.wipes.length;
+    el.wipeBody.innerHTML = state.wipes.slice().reverse().map(function (w) {
+      var d = new Date(w.ended);
+      return "<tr><td>" + d.toLocaleDateString([], { month: "short", day: "numeric" }) + "</td><td>" + w.runs + "</td><td>" + fmt.format(w.crewTake) +
+        '</td><td class="cut">' + fmt.format(w.cut) + "</td><td>" + fmt.format(w.runs ? w.cut / w.runs : 0) + "</td></tr>";
+    }).join("");
 
     el.undoWrap.hidden = !lastRemoved;
     if (lastRemoved) el.undoNum.textContent = String(lastRemoved.index + 1);
   }
 
   function updateEach() {
-    var raw = el.take.value, n = parseAmount(raw);
-    if (!raw.trim() || !(n > 0)) { el.each.textContent = "–"; el.each.className = "each empty"; }
-    else { el.each.textContent = fmt.format(n / state.crew); el.each.className = "each"; }
+    var n = parseAmount(el.take.value);
+    if (!(n > 0)) { el.each.textContent = "–"; el.each.className = "each empty"; return; }
+    var costs = parseAmount(el.costs.value);
+    var each = cutOf({ take: n, costs: costs > 0 ? costs : 0, crew: state.crew }, state.fee);
+    el.each.textContent = fmt.format(each);
+    el.each.className = "each";
   }
 
-  function moneyField(input, hint, key, optional) {
-    input.value = state[key] > 0 ? fmt.format(state[key]) : "";
+  function moneyField(input, hint, key, opts) {
+    var isPct = opts.pct;
+    function show(v) { return v > 0 ? (isPct ? String(v) : fmt.format(v)) : ""; }
+    input.value = show(state[key]);
     function setHint(text, bad) {
       hint.textContent = text;
       hint.classList.toggle("bad", !!bad);
       if (bad) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
     }
     function check(typing) {
-      var raw = input.value.trim();
+      var raw = input.value.trim().replace(/%$/, "");
       if (!raw) {
-        if (optional) { state[key] = 0; setHint("Leave blank if you don't owe anyone."); return true; }
+        if (opts.optional) { state[key] = 0; setHint(opts.blank || ""); return true; }
         setHint("Put in a goal, like 1m.", true); return false;
       }
-      var n = parseAmount(raw);
-      if (!(n > 0)) { setHint("That's not a number. Try 900k or 900,000.", true); return false; }
+      var n = isPct ? Number(raw) : parseAmount(raw);
+      if (!(n >= 0) || (isPct && n > 100) || (!opts.optional && !(n > 0))) {
+        setHint(isPct ? "Use a number from 0 to 100." : "That's not a number. Try 900k or 900,000.", true); return false;
+      }
       state[key] = n;
-      setHint(typing && /[km]$/i.test(raw) ? "= " + fmt.format(n) : "");
+      setHint(!isPct && typing && /[km]$/i.test(raw) ? "= " + fmt.format(n) : "");
       return true;
     }
     input.addEventListener("input", function () { if (check(true)) { save(); render(); } });
-    input.addEventListener("blur", function () {
-      if (parseAmount(input.value) > 0) input.value = fmt.format(state[key]);
-      check(false);
-    });
+    input.addEventListener("blur", function () { if (check(false)) input.value = show(state[key]); });
     check(false);
   }
-  moneyField(el.goal, el.goalHint, "goal", false);
-  moneyField(el.pay, el.payHint, "pay", true);
+  moneyField(el.goal, el.goalHint, "goal", { optional: false });
+  moneyField(el.pay, el.payHint, "pay", { optional: true, blank: "Leave blank if you don't owe anyone." });
+  moneyField(el.fee, el.feeHint, "fee", { optional: true, pct: true, blank: "Taken off your cut. Leave blank if you launder at your own base." });
 
-  el.take.addEventListener("input", function () {
+  function resetTakeMsg() {
     el.take.removeAttribute("aria-invalid");
-    el.takeMsg.textContent = "Works with 280k, 1.2m or 280,000.";
+    el.takeMsg.textContent = "Works with 280k, 1.2m or 280,000. Press Enter to add.";
     el.takeMsg.classList.remove("bad");
-    updateEach();
-  });
+  }
+  el.take.addEventListener("input", function () { resetTakeMsg(); updateEach(); });
+  el.costs.addEventListener("input", updateEach);
   el.crewMinus.addEventListener("click", function () { state.crew = clampCrew(state.crew - 1); save(); render(); });
   el.crewPlus.addEventListener("click", function () { state.crew = clampCrew(state.crew + 1); save(); render(); });
 
@@ -514,10 +606,18 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       el.take.focus();
       return;
     }
+    var costs = el.costs.value.trim() ? parseAmount(el.costs.value) : 0;
+    if (!(costs >= 0)) {
+      el.takeMsg.textContent = "Costs need to be a number, like 20k.";
+      el.takeMsg.classList.add("bad");
+      el.costs.focus();
+      return;
+    }
     if (state.example) { state.runs = []; state.example = false; state.nextId = 1; }
-    state.runs.push({ id: state.nextId++, take: n, crew: state.crew });
+    state.runs.push({ id: state.nextId++, take: n, crew: state.crew, costs: Math.min(costs, n), type: el.type.value.trim().slice(0, 40), t: Date.now() });
     lastRemoved = null;
-    el.take.value = "";
+    el.take.value = ""; el.costs.value = "";
+    resetTakeMsg();
     save(); render();
     el.take.focus();
   });
@@ -543,28 +643,36 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     save(); render(); el.take.focus();
   });
 
-  function resetClear() {
-    el.clearBtn.dataset.armed = "";
-    el.clearBtn.textContent = "Clear runs";
-    el.clearBtn.classList.remove("danger");
+  function twoTap(btn, label, armedLabel, action) {
+    btn.addEventListener("click", function () {
+      if (btn.dataset.armed === "1") {
+        clearTimeout(armTimers[btn.id]);
+        btn.dataset.armed = ""; btn.textContent = label; btn.classList.remove("danger");
+        action();
+        return;
+      }
+      btn.dataset.armed = "1"; btn.textContent = armedLabel; btn.classList.add("danger");
+      armTimers[btn.id] = setTimeout(function () { btn.dataset.armed = ""; btn.textContent = label; btn.classList.remove("danger"); }, 3000);
+    });
   }
-  el.clearBtn.addEventListener("click", function () {
-    if (el.clearBtn.dataset.armed === "1") {
-      clearTimeout(clearTimer); resetClear();
-      state.runs = []; state.example = false; lastRemoved = null;
-      save(); render(); el.take.focus();
-      return;
-    }
-    el.clearBtn.dataset.armed = "1";
-    el.clearBtn.textContent = "Sure? Tap again";
-    el.clearBtn.classList.add("danger");
-    clearTimer = setTimeout(resetClear, 3000);
+  twoTap(el.clearBtn, "Clear runs", "Sure? Tap again", function () {
+    state.runs = []; state.example = false; lastRemoved = null;
+    save(); render(); el.take.focus();
+  });
+  twoTap(el.wipeBtn, "New wipe", "Save & start fresh?", function () {
+    var c = compute(state);
+    state.wipes.push({ ended: Date.now(), runs: c.n, crewTake: c.crewTake, cut: c.total, best: c.bestCut });
+    if (state.wipes.length > 20) state.wipes = state.wipes.slice(-20);
+    state.runs = []; state.example = false; lastRemoved = null; state.nextId = 1;
+    save(); render(); el.take.focus();
   });
 
   function summaryText() {
     var c = compute(state);
-    var lines = ["**ROB RUN split** (" + c.n + (c.n === 1 ? " run" : " runs") + ")"];
-    lines.push("My cut: " + fmt.format(c.total));
+    var lines = ["**ROB RUN split** (" + c.n + (c.n === 1 ? " run" : " runs") + " this wipe)"];
+    lines.push("My cut: " + fmt.format(c.total) + (c.n ? " · avg " + fmt.format(c.avg) + " a run" : ""));
+    if (c.perHour) lines.push("Pace: " + fmt.format(c.perHour.rate) + " an hour");
+    if (c.n > 1) lines.push("Best run: " + fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? " (" + c.rows[c.bestIdx].run.type + ")" : ""));
     lines.push("Goal " + fmt.format(state.goal) + ": " + (c.leftGoal === 0 ? "done" + (c.total > state.goal ? " (+" + fmt.format(c.total - state.goal) + ")" : "") : fmt.format(c.leftGoal) + " to go"));
     if (state.pay > 0) lines.push("Pay back " + fmt.format(state.pay) + ": " + (c.leftPay === 0 ? "covered" : fmt.format(c.leftPay) + " to go"));
     return lines.join("\n");

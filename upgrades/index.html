@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Upgrade Calculator · ROB RUN Tools</title>
-<meta name="description" content="Work out what it costs to upgrade to the ROB RUN item you want.">
-<meta property="og:title" content="ROB RUN Upgrade Calculator">
-<meta property="og:description" content="Work out what it costs to upgrade to the item you want.">
+<title>Unlock Tree · ROB RUN Tools</title>
+<meta name="description" content="Larry's Shipments tree for ROB RUN. Pick what you want and see what it costs to unlock and buy it.">
+<meta property="og:title" content="ROB RUN Unlock Tree">
+<meta property="og:description" content="Pick what you want from Larry's Shipments tree and see what it costs to get there.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,20 +15,104 @@
 <link rel="stylesheet" href="../assets/site.css">
 <style>
 .head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-.preview { display: grid; gap: 18px; }
-.preview-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end; }
-.result {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.layout > * { min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.toolbar .search { flex: 1 1 220px; }
+.toolbar input { height: 38px; font-size: 14px; }
+.branches { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.chipbtn {
+  height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
 }
-.result > div { display: grid; gap: 6px; padding: 16px 18px 4px; border-left: 1px solid var(--line); }
-.result > div:first-child { border-left: 0; padding-left: 0; }
-.result .val { font-family: var(--font-mono); font-size: 22px; color: var(--muted); }
-@media (max-width: 640px) {
-  .preview-form, .result { grid-template-columns: minmax(0, 1fr); }
-  .result > div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
-  .result > div:first-child { border-top: 0; }
+.chipbtn:hover { color: var(--text); border-color: var(--muted); }
+.chipbtn[aria-pressed="true"] { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); }
+.chipbtn .n { color: var(--muted); margin-left: 4px; }
+
+.tree { list-style: none; margin: 0; padding: 6px 0; }
+.row { border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row-btn {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 10px calc(18px + var(--d, 0) * 22px);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.row-btn:hover { background: #1a1d22; }
+.row-btn[aria-expanded="true"] { background: #1a1d22; }
+.row-btn.child::before {
+  content: "";
+  position: absolute;
+  left: calc(18px + (var(--d) - 1) * 22px + 7px);
+  top: 0;
+  height: 50%;
+  width: 11px;
+  border-left: 1px solid #3a3f48;
+  border-bottom: 1px solid #3a3f48;
+}
+.tier {
+  min-width: 30px; text-align: center; padding: 1px 0; border: 1px solid var(--line); border-radius: 2px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted);
+}
+.name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name .new { margin-left: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--accent); }
+.cost { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.row.owned .name { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(140, 146, 156, 0.6); }
+.row.owned .tier { border-color: rgba(76, 195, 138, 0.45); color: var(--good); }
+.row.in-plan .tier { border-color: rgba(240, 180, 41, 0.5); color: var(--accent); }
+.row.target .name::after { content: "Target"; margin-left: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+
+.detail { display: grid; gap: 12px; padding: 4px 18px 16px calc(18px + var(--d, 0) * 22px + 40px); }
+.detail[hidden] { display: none; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px; }
+.fact { display: grid; gap: 3px; }
+.fact .v { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.fact .v.warn { color: var(--accent); }
+.detail .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.opens { font-size: 13px; color: var(--muted); }
+
+.plan { display: grid; gap: 14px; padding: 18px; position: sticky; top: 72px; }
+.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.plan-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+.plan-list .x { width: 26px; height: 26px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
+.plan-list .x:hover { color: var(--bad); border-color: var(--line); }
+.plan-empty { margin: 0; color: var(--muted); font-size: 14px; }
+.sum { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sum-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.sum-row .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.sum-row.total { padding-top: 8px; border-top: 1px solid var(--line); }
+.sum-row.total .v { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--accent); }
+.runs { margin: 0; font-size: 14px; color: var(--muted); }
+.runs strong { color: var(--text); font-weight: 500; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+.src { margin: 0; font-size: 12px; color: var(--muted); }
+
+.wip-body { display: grid; gap: 12px; }
+.wip-body ul { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 4px; }
+.loading { padding: 22px 18px; color: var(--muted); margin: 0; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .plan { position: static; }
+}
+@media (max-width: 520px) {
+  .branches { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .branches::-webkit-scrollbar { display: none; }
+  .chipbtn { flex: none; }
+  .row-btn { --step: 14px; padding-left: calc(14px + var(--d, 0) * 14px); }
+  .row-btn.child::before { left: calc(14px + (var(--d) - 1) * 14px + 5px); width: 7px; }
+  .detail { padding-left: 18px; }
 }
 </style>
 </head>
@@ -38,8 +122,9 @@
     <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
     <div class="nav-links">
       <a href="../split/">Split</a>
-      <a href="./" aria-current="page">Upgrades <span class="soon">Soon</span></a>
-      <a href="../items/">Items <span class="soon">Soon</span></a>
+      <a href="./" aria-current="page">Unlocks</a>
+      <a href="../items/">Prices</a>
+      <a href="../faq/">FAQ</a>
     </div>
   </div>
 </nav>
@@ -47,41 +132,287 @@
 <main class="page">
   <header class="page-head">
     <div class="head-row">
-      <h1>Upgrade calculator</h1>
-      <span class="tag accent">Under construction</span>
+      <h1>Unlock tree</h1>
+      <span class="tag accent" id="wipTag" hidden>Under construction</span>
     </div>
-    <p class="sub">Pick what you've got and what you want. It adds up every step in between so you know how much cash you need.</p>
+    <p class="sub">Larry's Shipments tree. Pick what you want, tick off what you already have, and it adds up everything you still need to unlock and buy.</p>
   </header>
 
-  <section class="panel wip preview" aria-label="Preview">
-    <p class="wip-note">We're still collecting upgrade costs. Here's what it'll look like.</p>
-    <div class="preview-form">
-      <div class="field">
-        <label for="from">What you've got</label>
-        <select id="from" disabled><option>Pick an item</option></select>
-      </div>
-      <div class="field">
-        <label for="to">What you want</label>
-        <select id="to" disabled><option>Pick an item</option></select>
-      </div>
-      <div class="field">
-        <label for="have">Cash you've got</label>
-        <input type="text" id="have" disabled placeholder="e.g. 500k">
-      </div>
-    </div>
-    <div class="result">
-      <div><span class="label">Total cost</span><span class="val">–</span></div>
-      <div><span class="label">Steps</span><span class="val">–</span></div>
-      <div><span class="label">Still need</span><span class="val">–</span></div>
-    </div>
-  </section>
+  <div id="app">
+    <p class="loading">Loading the tree...</p>
+  </div>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
+    <span id="footSrc">Prices change with patches. Double-check in game (H) before you save up.</span>
     <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
-    <span><a href="../split/">Split calculator</a> is live now.</span>
   </div>
 </footer>
+
+<template id="wipTpl">
+  <section class="panel wip">
+    <div class="wip-body">
+      <p class="wip-note">We're still putting the numbers in. Once they're in, this page will let you:</p>
+      <ul>
+        <li>Browse every branch: Documents, Vehicles, Construction, Weapons, Furnishings, Gear, Production and Gadgets</li>
+        <li>Click anything, like the Longhorn Wild, to see what has to come before it</li>
+        <li>Tick off what you've already unlocked so it isn't counted</li>
+        <li>See the total unlock cost, the Black Market price, and the settlement level and jail time you need</li>
+        <li>See how many runs that is at your average cut from the <a href="../split/">split calculator</a></li>
+      </ul>
+    </div>
+  </section>
+</template>
+
+<template id="appTpl">
+  <div class="layout">
+    <section class="panel" aria-label="Shipments tree">
+      <div class="toolbar">
+        <div class="search">
+          <label for="q" style="position:absolute;left:-9999px">Find a shipment</label>
+          <input type="search" id="q" placeholder="Find a shipment" autocomplete="off">
+        </div>
+        <label class="toggle"><input type="checkbox" id="hideOwned"> Hide what I have</label>
+      </div>
+      <div class="branches" id="branches" role="group" aria-label="Branches"></div>
+      <ul class="tree" id="tree"></ul>
+    </section>
+
+    <aside class="panel plan" aria-labelledby="planTitle">
+      <h2 class="panel-title" id="planTitle">Your plan</h2>
+      <ul class="plan-list" id="planList"></ul>
+      <p class="plan-empty" id="planEmpty">Click something in the tree and hit "Add to plan".</p>
+      <div class="sum" id="sum" hidden>
+        <div class="sum-row"><span class="label">Unlocks needed</span><span class="v" id="sCount">0</span></div>
+        <div class="sum-row"><span class="label">Unlock cost</span><span class="v" id="sUnlock">0</span></div>
+        <div class="sum-row"><span class="label">Black Market price</span><span class="v" id="sBuy">0</span></div>
+        <label class="toggle"><input type="checkbox" id="incBuy" checked> Include buying what I picked</label>
+        <div class="sum-row"><span class="label">Settlement level</span><span class="v" id="sSettle">–</span></div>
+        <div class="sum-row"><span class="label">Jail time</span><span class="v" id="sJail">–</span></div>
+        <div class="sum-row total"><span class="label">Total</span><span class="v" id="sTotal">0</span></div>
+        <p class="runs" id="runs"></p>
+      </div>
+      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;border:0">
+        <button type="button" class="btn small" id="clearPlan">Clear plan</button>
+        <button type="button" class="btn small" id="clearOwned">Reset what I have</button>
+      </div>
+      <p class="src" id="srcNote"></p>
+    </aside>
+  </div>
+</template>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "robrun-unlocks-v1", SPLIT_KEY = "robrun-split-v1";
+  var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  var app = document.getElementById("app");
+
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function money(n) { return n > 0 ? "$" + fmt.format(n) : "Free"; }
+
+  function loadState() {
+    try {
+      var o = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (o && typeof o === "object") return { plan: Array.isArray(o.plan) ? o.plan : [], owned: Array.isArray(o.owned) ? o.owned : [], branch: o.branch || null, incBuy: o.incBuy !== false, hideOwned: !!o.hideOwned };
+    } catch (e) { /* ignore */ }
+    return { plan: [], owned: [], branch: null, incBuy: true, hideOwned: false };
+  }
+  function saveState() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
+
+  function avgCut() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null");
+      if (!s || !Array.isArray(s.runs) || !s.runs.length || s.example) return 0;
+      var fee = Number(s.fee) || 0, total = 0;
+      s.runs.forEach(function (r) { total += (Math.max(0, (Number(r.take) || 0) - (Number(r.costs) || 0)) / (Number(r.crew) || 1)) * (1 - fee / 100); });
+      return total / s.runs.length;
+    } catch (e) { return 0; }
+  }
+
+  var state = loadState(), data = null, byId = {}, kids = {}, openId = null;
+
+  function showWip(note) {
+    document.getElementById("wipTag").hidden = false;
+    app.innerHTML = "";
+    app.appendChild(document.getElementById("wipTpl").content.cloneNode(true));
+    if (note) { var p = document.createElement("p"); p.className = "src"; p.style.marginTop = "12px"; p.textContent = note; app.appendChild(p); }
+  }
+
+  fetch("../data/shipments.json", { cache: "no-cache" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      if (!d || !Array.isArray(d.items) || !d.items.length) { showWip(); return; }
+      data = d;
+      d.items.forEach(function (it) { byId[it.id] = it; kids[it.id] = []; });
+      d.items.forEach(function (it) { if (it.after && byId[it.after]) kids[it.after].push(it); });
+      state.plan = state.plan.filter(function (id) { return byId[id]; });
+      state.owned = state.owned.filter(function (id) { return byId[id]; });
+      if (!state.branch || d.branches.indexOf(state.branch) < 0) state.branch = d.branches[0];
+      mount();
+    })
+    .catch(function () { showWip("Couldn't load the tree data. Refresh to try again."); });
+
+  // Everything you'd still have to unlock to get id, root first.
+  function pathTo(id) {
+    var out = [], seen = {}, cur = byId[id];
+    while (cur && !seen[cur.id]) { seen[cur.id] = 1; out.unshift(cur); cur = cur.after ? byId[cur.after] : null; }
+    return out;
+  }
+  function planCalc() {
+    var owned = {}, need = {}, list = [];
+    state.owned.forEach(function (id) { owned[id] = 1; });
+    state.plan.forEach(function (id) {
+      pathTo(id).forEach(function (n) { if (!owned[n.id] && !need[n.id]) { need[n.id] = 1; list.push(n); } });
+    });
+    var unlock = 0, settle = 0, jail = 0;
+    list.forEach(function (n) { unlock += n.unlock || 0; settle = Math.max(settle, n.settlement || 0); jail = Math.max(jail, n.jail || 0); });
+    var buy = 0;
+    state.plan.forEach(function (id) { buy += byId[id].buy || 0; });
+    return { list: list, need: need, unlock: unlock, buy: buy, settle: settle, jail: jail };
+  }
+
+  var el = {};
+  function mount() {
+    app.innerHTML = "";
+    app.appendChild(document.getElementById("appTpl").content.cloneNode(true));
+    ["q", "hideOwned", "branches", "tree", "planList", "planEmpty", "sum", "sCount", "sUnlock", "sBuy", "incBuy", "sSettle", "sJail", "sTotal", "runs", "clearPlan", "clearOwned", "srcNote"]
+      .forEach(function (id) { el[id] = document.getElementById(id); });
+    el.hideOwned.checked = state.hideOwned;
+    el.incBuy.checked = state.incBuy;
+    var note = [];
+    if (data.updated) note.push("Numbers last checked " + data.updated + ".");
+    if (data.source) note.push("Source: " + data.source + ".");
+    el.srcNote.textContent = note.join(" ");
+
+    el.q.addEventListener("input", renderTree);
+    el.hideOwned.addEventListener("change", function () { state.hideOwned = el.hideOwned.checked; saveState(); renderTree(); });
+    el.incBuy.addEventListener("change", function () { state.incBuy = el.incBuy.checked; saveState(); renderPlan(); });
+    el.clearPlan.addEventListener("click", function () { state.plan = []; saveState(); renderAll(); });
+    el.clearOwned.addEventListener("click", function () { state.owned = []; saveState(); renderAll(); });
+    el.branches.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-branch]"); if (!b) return;
+      state.branch = b.getAttribute("data-branch"); el.q.value = ""; openId = null; saveState(); renderAll();
+    });
+    el.tree.addEventListener("click", onTreeClick);
+    el.planList.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-rm]"); if (!b) return;
+      var id = b.getAttribute("data-rm");
+      state.plan = state.plan.filter(function (x) { return x !== id; }); saveState(); renderAll();
+    });
+    renderAll();
+  }
+
+  function renderAll() { renderBranches(); renderTree(); renderPlan(); }
+
+  function renderBranches() {
+    el.branches.innerHTML = data.branches.map(function (b) {
+      var n = data.items.filter(function (it) { return it.branch === b; }).length;
+      return '<button type="button" class="chipbtn" data-branch="' + esc(b) + '" aria-pressed="' + (b === state.branch && !el.q.value.trim()) + '">' + esc(b) + '<span class="n">' + n + "</span></button>";
+    }).join("");
+  }
+
+  function renderTree() {
+    var q = el.q.value.trim().toLowerCase();
+    var pc = planCalc(), owned = {}, target = {};
+    state.owned.forEach(function (id) { owned[id] = 1; });
+    state.plan.forEach(function (id) { target[id] = 1; });
+    var rows = [];
+    function walk(node, depth) {
+      if (state.hideOwned && owned[node.id] && !q) { kids[node.id].forEach(function (k) { walk(k, depth); }); return; }
+      rows.push({ node: node, depth: depth });
+      kids[node.id].forEach(function (k) { walk(k, depth + 1); });
+    }
+    if (q) {
+      data.items.filter(function (it) { return it.name.toLowerCase().indexOf(q) >= 0; })
+        .forEach(function (it) { rows.push({ node: it, depth: 0, showBranch: true }); });
+    } else {
+      data.items.filter(function (it) { return it.branch === state.branch && (!it.after || !byId[it.after]); })
+        .forEach(function (root) { walk(root, 0); });
+    }
+    renderBranches();
+    if (!rows.length) { el.tree.innerHTML = '<li class="loading">' + (q ? "Nothing matches that." : "Nothing here yet.") + "</li>"; return; }
+    el.tree.innerHTML = rows.map(function (r) {
+      var n = r.node, cls = ["row"];
+      if (owned[n.id]) cls.push("owned"); else if (pc.need[n.id]) cls.push("in-plan");
+      if (target[n.id]) cls.push("target");
+      var open = openId === n.id;
+      return '<li class="' + cls.join(" ") + '" style="--d:' + r.depth + '">' +
+        '<button type="button" class="row-btn' + (r.depth ? " child" : "") + '" data-id="' + esc(n.id) + '" aria-expanded="' + open + '">' +
+        '<span class="tier">' + esc(n.tier || "–") + "</span>" +
+        '<span class="name">' + esc(n.name) + (n.isNew ? '<span class="new">NEW</span>' : "") + (r.showBranch ? ' <span class="cost">· ' + esc(n.branch) + "</span>" : "") + "</span>" +
+        '<span class="cost">' + money(n.unlock) + "</span></button>" +
+        (open ? detailHtml(n, owned, target) : "") + "</li>";
+    }).join("");
+  }
+
+  function detailHtml(n, owned, target) {
+    var path = pathTo(n.id), reach = 0;
+    path.forEach(function (p) { if (!owned[p.id]) reach += p.unlock || 0; });
+    var parent = n.after ? byId[n.after] : null;
+    var opens = kids[n.id].map(function (k) { return esc(k.name); }).join(", ");
+    return '<div class="detail">' +
+      '<div class="facts">' +
+      '<div class="fact"><span class="label">Unlock</span><span class="v">' + money(n.unlock) + "</span></div>" +
+      '<div class="fact"><span class="label">Black Market</span><span class="v">' + (n.buy ? money(n.buy) : "–") + "</span></div>" +
+      '<div class="fact"><span class="label">To reach (unlocks)</span><span class="v warn">' + money(reach) + "</span></div>" +
+      '<div class="fact"><span class="label">Settlement</span><span class="v">' + (n.settlement ? "Level " + n.settlement + "+" : "Any") + "</span></div>" +
+      '<div class="fact"><span class="label">Jail time</span><span class="v">' + (n.jail ? n.jail + " years" : "None") + "</span></div>" +
+      "</div>" +
+      (parent ? '<div class="opens">Comes after ' + esc(parent.name) + (opens ? ". Opens " + opens + "." : ".") + "</div>" : (opens ? '<div class="opens">Opens ' + opens + ".</div>" : "")) +
+      '<div class="actions">' +
+      '<button type="button" class="btn small' + (target[n.id] ? "" : " primary") + '" data-act="plan" data-id="' + esc(n.id) + '">' + (target[n.id] ? "Remove from plan" : "Add to plan") + "</button>" +
+      '<button type="button" class="btn small" data-act="own" data-id="' + esc(n.id) + '">' + (owned[n.id] ? "I don't have this" : "I have this") + "</button>" +
+      "</div></div>";
+  }
+
+  function onTreeClick(e) {
+    var act = e.target.closest("button[data-act]");
+    if (act) {
+      var id = act.getAttribute("data-id");
+      if (act.getAttribute("data-act") === "plan") {
+        if (state.plan.indexOf(id) >= 0) state.plan = state.plan.filter(function (x) { return x !== id; });
+        else state.plan.push(id);
+      } else {
+        if (state.owned.indexOf(id) >= 0) state.owned = state.owned.filter(function (x) { return x !== id; });
+        else {
+          // Having something means you have everything before it.
+          pathTo(id).forEach(function (p) { if (state.owned.indexOf(p.id) < 0) state.owned.push(p.id); });
+        }
+      }
+      saveState(); renderTree(); renderPlan();
+      return;
+    }
+    var row = e.target.closest("button.row-btn");
+    if (!row) return;
+    var rid = row.getAttribute("data-id");
+    openId = openId === rid ? null : rid;
+    renderTree();
+  }
+
+  function renderPlan() {
+    var pc = planCalc();
+    el.planList.innerHTML = state.plan.map(function (id) {
+      var n = byId[id];
+      return "<li><span>" + esc(n.name) + ' <span class="cost">' + esc(n.branch) + '</span></span><button type="button" class="x" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(n.name) + ' from plan">×</button></li>';
+    }).join("");
+    el.planEmpty.hidden = !!state.plan.length;
+    el.sum.hidden = !state.plan.length;
+    if (!state.plan.length) return;
+    var total = pc.unlock + (state.incBuy ? pc.buy : 0);
+    el.sCount.textContent = String(pc.list.length);
+    el.sUnlock.textContent = money(pc.unlock);
+    el.sBuy.textContent = pc.buy ? money(pc.buy) : "–";
+    el.sSettle.textContent = pc.settle ? "Level " + pc.settle + "+" : "Any";
+    el.sJail.textContent = pc.jail ? pc.jail + " years" : "None";
+    el.sTotal.textContent = money(total);
+    var avg = avgCut();
+    if (total <= 0) el.runs.textContent = "";
+    else if (avg > 0) el.runs.innerHTML = "At your average cut of " + fmt.format(avg) + ", that's about <strong>" + Math.ceil(total / avg) + " runs</strong>.";
+    else el.runs.innerHTML = 'Log a few runs in the <a href="../split/">split calculator</a> and this will tell you how many runs it takes.';
+  }
+})();
+</script>
 </body>
 </html>

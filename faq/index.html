@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ · ROB RUN Tools</title>
+<meta name="description" content="Quick answers to common ROB RUN questions: wipes, keeping your cash, what you lose when you die, Notoriety, unlocks and police pay.">
+<meta property="og:title" content="ROB RUN FAQ">
+<meta property="og:description" content="Wipes, keeping your cash, what you lose when you die, Notoriety, unlocks and police pay.">
+<meta name="theme-color" content="#0d0e11">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.faq { display: grid; }
+.q { border-top: 1px solid var(--line); }
+.q:first-child { border-top: 0; }
+.q summary {
+  list-style: none; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 16px 18px;
+  font-family: var(--font-display); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase;
+}
+.q summary::-webkit-details-marker { display: none; }
+.q summary::after { content: "+"; font-family: var(--font-mono); font-size: 18px; color: var(--muted); }
+.q[open] summary::after { content: "−"; color: var(--accent); }
+.q summary:hover { background: #1a1d22; }
+.a { padding: 0 18px 18px; display: grid; gap: 10px; max-width: 72ch; color: #c9ccd2; }
+.a p { margin: 0; }
+.a table { border-collapse: collapse; width: 100%; max-width: 560px; font-size: 14px; }
+.a th, .a td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.a th { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.a td.n { font-family: var(--font-mono); text-align: right; white-space: nowrap; }
+.sources { padding: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+.sources ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <div class="nav-in">
+    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
+    <div class="nav-links">
+      <a href="../split/">Split</a>
+      <a href="../upgrades/">Unlocks</a>
+      <a href="../items/">Prices</a>
+      <a href="./" aria-current="page">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="page-head">
+    <h1>FAQ</h1>
+    <p class="sub">Quick answers to the stuff people keep asking. Last checked November 13, 2026, so things may have changed since the latest patch.</p>
+  </header>
+
+  <section class="panel faq">
+    <details class="q" open>
+      <summary>When does the server wipe, and what do I lose?</summary>
+      <div class="a">
+        <p>Every 7 days the Federal Raid resets the server. Your plot, base, weapons and cash are gone, and that includes money in the bank.</p>
+        <p>You keep your cosmetics, your name, your settings and tutorial progress, and your accumulated jail time. The stuff that gets wiped is converted into jail time and authority, so it isn't a total loss.</p>
+        <p>Bottom line: spend before the wipe. A big purchase the night before a reset is mostly wasted.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>How do I keep my cash from getting stolen?</summary>
+      <div class="a">
+        <p>Open an account at Looty Bay Bank. You have to walk in as a Civilian, not with your mask on. Then launder your dirty cash at the Laundering Desk in your base. Once it's in the bank, nobody can take it.</p>
+        <p>If you pull it back out at an ATM, it's stealable again. Before you have a house, Lenny will launder for you, but he takes a cut. If you use him, put his fee in the <a href="../split/">split calculator</a> so your numbers are real.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>What do I lose if I die?</summary>
+      <div class="a">
+        <table>
+          <thead><tr><th>What happened</th><th>What you lose</th></tr></thead>
+          <tbody>
+            <tr><td>Criminal dies in Looty Bay</td><td>Your whole inventory</td></tr>
+            <tr><td>Criminal surrenders to cops</td><td>Your bag. You keep equipped gear</td></tr>
+            <tr><td>Civilian dies in Looty Bay</td><td>Nothing. Bag and gear stay</td></tr>
+            <tr><td>Cop dies</td><td>Department gear. Personal gear stays</td></tr>
+            <tr><td>Anyone dies in the desert</td><td>All loot</td></tr>
+          </tbody>
+        </table>
+        <p>Taking your mask off doesn't clear Criminal status. You have to actually leave Looty Bay.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>What is Notoriety?</summary>
+      <div class="a">
+        <p>Hit places back to back in the same trip into the city and your Notoriety goes up. Higher Notoriety means the fence pays you more, but your bag gets bigger and cops and other players start hunting you.</p>
+        <p>It resets when you leave Looty Bay. Solo players and duos start with higher Notoriety than full crews.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Fence van or Sales Center?</summary>
+      <div class="a">
+        <p>Fence vans are the dollar signs on the map. They're quick and close. Grab your cash off the counter after you sell, because money left there can be stolen.</p>
+        <p>Sales Centers pay better, but you need a plot in that district to use one.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Black Market or city stores?</summary>
+      <div class="a">
+        <p>Use the Black Market, through Lenny or your base laptop. City stores charge about three times as much. A lot of Black Market stock has to be unlocked in the Shipments tree first, and you can't buy from vendors while your base is being raided.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>How do unlocks work?</summary>
+      <div class="a">
+        <p>Press <strong>H</strong> to open Larry's Shipments menu. Each item costs money to unlock, and then you buy it on the Black Market. Some items also need your base in a settlement of a certain level, or a minimum amount of jail time.</p>
+        <p>Check the requirements before you save up, because more cash won't get you past a settlement lock. Example: the Longhorn Wild costs $500k to unlock after the Royal E, needs a level 3 settlement, and then costs $4.5M on the Black Market.</p>
+        <p>The <a href="../upgrades/">unlock tree</a> will add all of this up for you once the numbers are in.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>How much do cops make?</summary>
+      <div class="a">
+        <table>
+          <thead><tr><th>Action</th><th style="text-align:right">Pays</th></tr></thead>
+          <tbody>
+            <tr><td>Arresting a criminal</td><td class="n">$9,000–15,000</td></tr>
+            <tr><td>Salary for killing a criminal</td><td class="n">$5,000</td></tr>
+            <tr><td>Seizing a criminal's loot (base)</td><td class="n">$4,000</td></tr>
+            <tr><td>Killing a criminal</td><td class="n">$2,000</td></tr>
+            <tr><td>Seizing vehicle loot (base)</td><td class="n">$2,000</td></tr>
+          </tbody>
+        </table>
+        <p>Arrests pay more than kills. Criminals can offer you a bribe, and taking it is your call. Cops start with pistols on a fresh server, and better gear opens up later in the wipe.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel sources" aria-labelledby="srcTitle">
+    <h2 class="panel-title" id="srcTitle">Where this comes from</h2>
+    <ul>
+      <li><a href="https://games.gg/rob-run/guides/rob-run-progression-explained-how-to-get-stronger/">GAMES.GG: Rob Run progression explained</a></li>
+      <li><a href="https://grindnstrat.com/rob-run-money-guide/">Grind N Strat: ROB RUN money guide</a></li>
+      <li><a href="https://metaforge.app/rob-run/shipments">MetaForge: Shipments planner</a></li>
+    </ul>
+    <p style="margin:0">Spot something wrong or out of date? Tell us and we'll fix it.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
+    <span><a href="../split/">Split calculator</a></span>
+  </div>
+</footer>
+</body>
+</html>
