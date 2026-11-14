@@ -1,9 +1,13 @@
 # ROB RUN Tools
 
-Free, fan-made helpers for ROB RUN crews.
+Calculators and price lists for ROB RUN. Fan-made, not affiliated with ROB RUN or Kefir.
 
-**Live site:** https://robruntools.github.io
+**Site:** https://robruntools.github.io
 
-- **Split Calculator** ([robruntools.github.io/split](https://robruntools.github.io/split/)): split each run's take across your crew and track your cut toward a goal or a debt.
+| Page | Status |
+|---|---|
+| [Split calculator](https://robruntools.github.io/split/) | Live |
+| [Upgrade calculator](https://robruntools.github.io/upgrades/) | Under construction |
+| [Items & prices](https://robruntools.github.io/items/) | Under construction |
 
-Everything runs in the browser. Data you enter is saved only on your own device.
+Plain HTML and CSS, no build step. Shared styles live in `assets/site.css`.

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upgrade Calculator · ROB RUN Tools</title>
+<meta name="description" content="Work out what it costs to upgrade to the ROB RUN item you want.">
+<meta property="og:title" content="ROB RUN Upgrade Calculator">
+<meta property="og:description" content="Work out what it costs to upgrade to the item you want.">
+<meta name="theme-color" content="#0d0e11">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.preview { display: grid; gap: 18px; }
+.preview-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end; }
+.result {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+.result > div { display: grid; gap: 6px; padding: 16px 18px 4px; border-left: 1px solid var(--line); }
+.result > div:first-child { border-left: 0; padding-left: 0; }
+.result .val { font-family: var(--font-mono); font-size: 22px; color: var(--muted); }
+@media (max-width: 640px) {
+  .preview-form, .result { grid-template-columns: minmax(0, 1fr); }
+  .result > div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+  .result > div:first-child { border-top: 0; }
+}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <div class="nav-in">
+    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
+    <div class="nav-links">
+      <a href="../split/">Split</a>
+      <a href="./" aria-current="page">Upgrades <span class="soon">Soon</span></a>
+      <a href="../items/">Items <span class="soon">Soon</span></a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="page-head">
+    <div class="head-row">
+      <h1>Upgrade calculator</h1>
+      <span class="tag accent">Under construction</span>
+    </div>
+    <p class="sub">Pick what you've got and what you want. It adds up every step in between so you know how much cash you need.</p>
+  </header>
+
+  <section class="panel wip preview" aria-label="Preview">
+    <p class="wip-note">We're still collecting upgrade costs. Here's what it'll look like.</p>
+    <div class="preview-form">
+      <div class="field">
+        <label for="from">What you've got</label>
+        <select id="from" disabled><option>Pick an item</option></select>
+      </div>
+      <div class="field">
+        <label for="to">What you want</label>
+        <select id="to" disabled><option>Pick an item</option></select>
+      </div>
+      <div class="field">
+        <label for="have">Cash you've got</label>
+        <input type="text" id="have" disabled placeholder="e.g. 500k">
+      </div>
+    </div>
+    <div class="result">
+      <div><span class="label">Total cost</span><span class="val">–</span></div>
+      <div><span class="label">Steps</span><span class="val">–</span></div>
+      <div><span class="label">Still need</span><span class="val">–</span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-in">
+    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
+    <span><a href="../split/">Split calculator</a> is live now.</span>
+  </div>
+</footer>
+</body>
+</html>
