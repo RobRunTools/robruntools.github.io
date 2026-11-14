@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROB RUN Split Calculator</title>
+<meta name="description" content="Split each ROB RUN take across your crew and track your cut toward a goal.">
+<meta property="og:title" content="ROB RUN Split Calculator">
+<meta property="og:description" content="Split each run's take across your crew and track your cut toward a goal.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%2314171c%27/%3E%3Cpolygon points=%270,18 18,0 26,0 0,26%27 fill=%27%23f0b429%27/%3E%3Cpolygon points=%276,32 32,6 32,14 14,32%27 fill=%27%23f0b429%27/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: heist ledger. Your cut and your money side by side up top, the add-a-run bar, then the run log. */
+  --bg: #e8ebef;
+  --surface: #ffffff;
+  --ink: #14171c;
+  --muted: #5a6270;
+  --line: #d3d8df;
+  --accent: #e3a21a;
+  --accent-text: #8a5a00;
+  --on-accent: #1a1300;
+  --good: #1d8452;
+  --good-soft: #dcf2e6;
+  --track: #e2e6eb;
+  --font-display: "Bebas Neue", "Oswald", Impact, "Arial Narrow", sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216;
+    --surface: #181c22;
+    --ink: #e7e9ed;
+    --muted: #99a1ad;
+    --line: #2b313a;
+    --accent: #f0b429;
+    --accent-text: #f3bf45;
+    --on-accent: #1a1300;
+    --good: #45c486;
+    --good-soft: #163526;
+    --track: #252a33;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216;
+  --surface: #181c22;
+  --ink: #e7e9ed;
+  --muted: #99a1ad;
+  --line: #2b313a;
+  --accent: #f0b429;
+  --accent-text: #f3bf45;
+  --on-accent: #1a1300;
+  --good: #45c486;
+  --good-soft: #163526;
+  --track: #252a33;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+  display: grid;
+  gap: 16px;
+}
+h1, h2 { text-wrap: balance; margin: 0; }
+
+/* Header */
+.top { display: grid; gap: 10px; }
+.back { font-size: 14px; font-weight: 500; color: var(--accent-text); text-decoration: none; justify-self: start; }
+.back:hover { text-decoration: underline; }
+.tape {
+  height: 8px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 12px, var(--ink) 12px 24px);
+  width: 120px;
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+h1 .brand { color: var(--accent-text); }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 16px;
+}
+@media (max-width: 720px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Banner */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  border: 1px dashed var(--accent-text);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--surface);
+}
+.banner p { margin: 0; }
+.banner[hidden] { display: none; }
+
+/* Summary */
+.sum-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.pill.progress { border-color: var(--accent-text); color: var(--accent-text); }
+.pill.good { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+.big {
+  font-family: var(--font-display);
+  font-size: 68px;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.subline { margin: -6px 0 0; color: var(--muted); font-size: 14px; }
+.bar-zone { padding: 22px 0 22px; position: relative; }
+.bar {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--track);
+}
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 7px;
+  background: var(--accent);
+  transition: width 300ms ease;
+}
+.fill.done { background: var(--good); }
+.mark {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  background: var(--ink);
+  border-radius: 1px;
+}
+.mark.pay { background: var(--muted); }
+.mark-label {
+  position: absolute;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mark-label.above { top: 0; }
+.mark-label.below { bottom: 0; color: var(--ink); font-weight: 500; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  margin: 0;
+}
+.stats div { display: grid; gap: 2px; }
+.stats dt { font-size: 13px; color: var(--muted); }
+.stats dd {
+  margin: 0;
+  font-family: var(--font-num);
+  font-size: 17px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.stats dd.ok { color: var(--good); }
+.stats [hidden] { display: none; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.copy-msg { font-size: 13px; color: var(--muted); }
+#copyFallback {
+  width: 100%;
+  min-height: 120px;
+  font-family: var(--font-num);
+  font-size: 13px;
+}
+#copyFallback[hidden] { display: none; }
+
+/* Form controls */
+label, .label { font-size: 13px; font-weight: 500; color: var(--muted); }
+.opt { font-weight: 400; opacity: 0.8; }
+.field { display: grid; gap: 6px; }
+input[type="text"] {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+input[type="text"]::placeholder { color: var(--muted); opacity: 0.7; }
+input[type="text"][aria-invalid="true"] { border-color: #c0392b; }
+.hint { margin: -2px 0 0; font-size: 13px; color: var(--muted); min-height: 1.5em; font-variant-numeric: tabular-nums; }
+.hint.bad, .error { color: #c0392b; }
+.error { margin: 0; font-size: 13px; }
+.error:empty { display: none; }
+.setup .field + .field { margin-top: 4px; }
+.tip { margin: 0; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+.tip code { font-family: var(--font-num); color: var(--ink); }
+
+.btn {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 14px/1 var(--font-body);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { filter: brightness(1.05); }
+.btn.small { height: 34px; padding: 0 12px; font-size: 13px; }
+.btn.danger { border-color: #c0392b; color: #c0392b; }
+.link {
+  background: none; border: 0; padding: 0;
+  color: var(--accent-text); font: inherit; font-weight: 600;
+  text-decoration: underline; cursor: pointer;
+}
+:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+
+/* Add run */
+.add form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px 16px;
+}
+.add .take { flex: 1 1 200px; }
+.stepper {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.stepper button {
+  width: 40px; height: 100%;
+  border: 0; background: transparent; color: var(--ink);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.stepper button:hover { background: var(--track); }
+.stepper button:disabled { opacity: 0.35; cursor: default; }
+.stepper output {
+  min-width: 64px;
+  text-align: center;
+  font-family: var(--font-num);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.preview { flex: 1 1 170px; }
+.each {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-num);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+.each.empty { color: var(--muted); font-weight: 400; font-size: 16px; }
+
+/* Log */
+.log-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.log-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.log-tools [hidden] { display: none; }
+.table-wrap { overflow-x: auto; margin: 0 -4px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 10px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+th:first-child, td:first-child { text-align: left; width: 44px; color: var(--muted); }
+td.num { font-family: var(--font-num); font-size: 14px; }
+td.cut { color: var(--accent-text); font-weight: 600; }
+td.crew { color: var(--muted); }
+td.rm { width: 40px; padding-right: 0; }
+tfoot td { border-bottom: 0; font-weight: 600; }
+tfoot td:first-child { color: var(--ink); }
+.chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: 1px;
+  border: 1px solid var(--good);
+  color: var(--good);
+  background: var(--good-soft);
+}
+.chip.pay { border-color: var(--line); color: var(--muted); background: transparent; }
+.x {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px; line-height: 1;
+  cursor: pointer;
+}
+.x:hover { border-color: var(--line); color: var(--ink); }
+.empty-log { margin: 0; color: var(--muted); }
+.empty-log[hidden] { display: none; }
+.foot { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 420px) {
+  .wrap { padding: 20px 16px 32px; }
+  h1 { font-size: 38px; }
+  .big { font-size: 56px; }
+  .stats { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fill { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="back" href="../">← All ROB RUN tools</a>
+    <div class="tape" aria-hidden="true"></div>
+    <h1><span class="brand">ROB RUN</span> Split Calculator</h1>
+    <p class="lede">Log each run's take, split it evenly across your crew, and watch your cut climb toward your goal.</p>
+  </header>
+
+  <div id="exampleBanner" class="banner" hidden>
+    <p>These are example runs. Adding your first run clears them.</p>
+    <button type="button" id="startEmpty" class="btn small">Start empty</button>
+  </div>
+
+  <div class="grid">
+    <section class="card summary" aria-labelledby="sumTitle">
+      <div class="sum-head">
+        <h2 id="sumTitle">Your cut</h2>
+        <span id="status" class="pill">No runs yet</span>
+      </div>
+      <div class="big" id="total" aria-live="polite">0</div>
+      <p class="subline" id="subline">No runs logged</p>
+      <div class="bar-zone" id="barZone">
+        <span class="mark-label above" id="payLabel"></span>
+        <div class="bar" role="progressbar" id="bar" aria-label="Progress to goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="fill" id="fill"></div>
+          <div class="mark pay" id="payMark"></div>
+          <div class="mark" id="goalMark"></div>
+        </div>
+        <span class="mark-label below" id="goalLabel"></span>
+      </div>
+      <dl class="stats">
+        <div><dt>Left to goal</dt><dd id="leftGoal">0</dd></div>
+        <div id="payRow"><dt>Left to pay back</dt><dd id="leftPay">0</dd></div>
+        <div><dt>Runs to goal at your average</dt><dd id="runsLeft">–</dd></div>
+        <div><dt>Crew take, all runs</dt><dd id="crewTake">0</dd></div>
+      </dl>
+      <div class="actions">
+        <button type="button" id="copyBtn" class="btn small">Copy summary</button>
+        <span id="copyMsg" class="copy-msg" role="status"></span>
+      </div>
+      <textarea id="copyFallback" readonly hidden aria-label="Summary text to copy"></textarea>
+    </section>
+
+    <section class="card setup" aria-labelledby="setupTitle">
+      <h2 id="setupTitle">Your money</h2>
+      <div class="field">
+        <label for="goal">Goal for your cut</label>
+        <input type="text" id="goal" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="1m">
+        <p class="hint" id="goalHint"></p>
+      </div>
+      <div class="field">
+        <label for="pay">Amount to pay back <span class="opt">(optional)</span></label>
+        <input type="text" id="pay" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0">
+        <p class="hint" id="payHint"></p>
+      </div>
+      <p class="tip">Type full numbers or shorthand: <code>280k</code>, <code>1.3m</code>, <code>280,000</code>.</p>
+    </section>
+  </div>
+
+  <section class="card add" aria-labelledby="addTitle">
+    <h2 id="addTitle">Add a run</h2>
+    <form id="addForm" novalidate>
+      <div class="field take">
+        <label for="take">Run take (whole crew)</label>
+        <input type="text" id="take" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 280k">
+      </div>
+      <div class="field">
+        <span class="label" id="crewLabel">Split between</span>
+        <div class="stepper" role="group" aria-labelledby="crewLabel">
+          <button type="button" id="crewMinus" aria-label="One fewer person">−</button>
+          <output id="crewOut" aria-live="polite">3 people</output>
+          <button type="button" id="crewPlus" aria-label="One more person">+</button>
+        </div>
+      </div>
+      <div class="field preview">
+        <span class="label">Each person gets</span>
+        <span id="each" class="each empty">Enter a take</span>
+      </div>
+      <button type="submit" class="btn primary" id="addBtn">Add run</button>
+    </form>
+    <p id="takeError" class="error" role="alert"></p>
+  </section>
+
+  <section class="card log" aria-labelledby="logTitle">
+    <div class="log-head">
+      <h2 id="logTitle">Runs</h2>
+      <div class="log-tools">
+        <span id="undoWrap" hidden>Removed run <span id="undoNum"></span>. <button type="button" class="link" id="undoBtn">Undo</button></span>
+        <button type="button" id="clearBtn" class="btn small">Clear all runs</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="logTable">
+        <thead>
+          <tr><th scope="col">Run</th><th scope="col">Take</th><th scope="col">Split</th><th scope="col">Your cut</th><th scope="col">Running total</th><th scope="col"><span class="visually-hidden" style="position:absolute;left:-9999px">Remove</span></th></tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+        <tfoot id="logFoot"></tfoot>
+      </table>
+    </div>
+    <p id="emptyLog" class="empty-log" hidden>No runs yet. Add your first run above.</p>
+  </section>
+
+  <p class="foot">Saved in this browser only. Everyone who opens this link keeps their own runs and settings.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "robrun-split-v1";
+  var MIN_CREW = 1, MAX_CREW = 12;
+  var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  var compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
+
+  function exampleState() {
+    return {
+      goal: 1000000, pay: 900000, crew: 3, example: true, nextId: 4,
+      runs: [
+        { id: 1, take: 280000, crew: 3 },
+        { id: 2, take: 525000, crew: 3 },
+        { id: 3, take: 789000, crew: 3 }
+      ]
+    };
+  }
+
+  function parseAmount(raw) {
+    var s = String(raw == null ? "" : raw).trim().toLowerCase().replace(/[\s,$_]/g, "");
+    if (!s) return NaN;
+    var m = s.match(/^(\d+(?:\.\d+)?|\.\d+)(k|m)?$/);
+    if (!m) return NaN;
+    var n = parseFloat(m[1]);
+    if (m[2] === "k") n *= 1e3;
+    else if (m[2] === "m") n *= 1e6;
+    return n;
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        if (o && Array.isArray(o.runs)) {
+          o.goal = Number(o.goal) > 0 ? Number(o.goal) : 1000000;
+          o.pay = Number(o.pay) > 0 ? Number(o.pay) : 0;
+          o.crew = clampCrew(Number(o.crew) || 3);
+          o.nextId = Number(o.nextId) || (o.runs.length + 1);
+          o.runs = o.runs.filter(function (r) { return r && Number(r.take) > 0; }).map(function (r, i) {
+            return { id: r.id || i + 1, take: Number(r.take), crew: clampCrew(Number(r.crew) || 3) };
+          });
+          return o;
+        }
+      }
+    } catch (e) { /* storage unavailable: fall back to examples */ }
+    return exampleState();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+  function clampCrew(n) { return Math.max(MIN_CREW, Math.min(MAX_CREW, Math.round(n))); }
+
+  function compute(s) {
+    var running = 0, crewTake = 0, rows = [], payHitAt = -1, goalHitAt = -1;
+    s.runs.forEach(function (r, i) {
+      var cut = r.take / r.crew;
+      var before = running;
+      running += cut;
+      crewTake += r.take;
+      if (s.pay > 0 && before < s.pay && running >= s.pay) payHitAt = i;
+      if (before < s.goal && running >= s.goal) goalHitAt = i;
+      rows.push({ run: r, cut: cut, running: running });
+    });
+    var total = running;
+    var n = s.runs.length;
+    var avg = n ? total / n : 0;
+    var leftGoal = Math.max(0, s.goal - total);
+    var leftPay = Math.max(0, s.pay - total);
+    return {
+      rows: rows, total: total, crewTake: crewTake, n: n, avg: avg,
+      leftGoal: leftGoal, leftPay: leftPay,
+      runsLeft: leftGoal === 0 ? 0 : (avg > 0 ? Math.ceil(leftGoal / avg) : null),
+      payHitAt: payHitAt, goalHitAt: goalHitAt
+    };
+  }
+
+  var state = load();
+  var lastRemoved = null;
+  var clearTimer = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {
+    banner: $("exampleBanner"), startEmpty: $("startEmpty"),
+    status: $("status"), total: $("total"), subline: $("subline"),
+    fill: $("fill"), bar: $("bar"), payMark: $("payMark"), goalMark: $("goalMark"),
+    payLabel: $("payLabel"), goalLabel: $("goalLabel"),
+    leftGoal: $("leftGoal"), leftPay: $("leftPay"), payRow: $("payRow"),
+    runsLeft: $("runsLeft"), crewTake: $("crewTake"),
+    copyBtn: $("copyBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback"),
+    goal: $("goal"), goalHint: $("goalHint"), pay: $("pay"), payHint: $("payHint"),
+    addForm: $("addForm"), take: $("take"), takeError: $("takeError"),
+    crewMinus: $("crewMinus"), crewPlus: $("crewPlus"), crewOut: $("crewOut"), each: $("each"),
+    logBody: $("logBody"), logFoot: $("logFoot"), logTable: $("logTable"), emptyLog: $("emptyLog"),
+    undoWrap: $("undoWrap"), undoNum: $("undoNum"), undoBtn: $("undoBtn"), clearBtn: $("clearBtn")
+  };
+
+  function placeLabel(label, pct) {
+    label.style.left = pct + "%";
+    label.style.transform = pct > 75 ? "translateX(-100%)" : (pct < 15 ? "translateX(0)" : "translateX(-50%)");
+  }
+
+  function render() {
+    var c = compute(state);
+
+    el.banner.hidden = !state.example;
+
+    // Summary
+    el.total.textContent = fmt.format(c.total);
+    if (!c.n) {
+      el.subline.textContent = "No runs logged";
+    } else if (c.total > state.goal) {
+      el.subline.textContent = "Over your goal by " + fmt.format(c.total - state.goal) + " · " + c.n + (c.n === 1 ? " run" : " runs");
+    } else {
+      el.subline.textContent = "From " + c.n + (c.n === 1 ? " run" : " runs") + " · average cut " + fmt.format(c.avg);
+    }
+
+    var pctGoal = state.goal > 0 ? Math.min(100, (c.total / state.goal) * 100) : 0;
+    if (!c.n) { el.status.textContent = "No runs yet"; el.status.className = "pill"; }
+    else if (c.total >= state.goal) { el.status.textContent = "Goal reached"; el.status.className = "pill good"; }
+    else if (state.pay > 0 && c.total >= state.pay) { el.status.textContent = "Paid back"; el.status.className = "pill good"; }
+    else { el.status.textContent = Math.floor(pctGoal) + "% of goal"; el.status.className = "pill progress"; }
+
+    var scale = Math.max(state.goal, state.pay, 1);
+    var fillPct = Math.min(100, (c.total / scale) * 100);
+    el.fill.style.width = fillPct + "%";
+    el.fill.classList.toggle("done", c.total >= state.goal);
+    el.bar.setAttribute("aria-valuenow", String(Math.round(pctGoal)));
+
+    var goalPct = (state.goal / scale) * 100;
+    el.goalMark.style.left = "calc(" + goalPct + "% - 1px)";
+    el.goalLabel.textContent = "Goal " + compact.format(state.goal);
+    placeLabel(el.goalLabel, goalPct);
+
+    if (state.pay > 0) {
+      var payPct = (state.pay / scale) * 100;
+      el.payMark.hidden = false;
+      el.payMark.style.left = "calc(" + payPct + "% - 1px)";
+      el.payLabel.hidden = false;
+      el.payLabel.textContent = "Pay back " + compact.format(state.pay);
+      placeLabel(el.payLabel, payPct);
+      el.payRow.hidden = false;
+      el.leftPay.textContent = c.leftPay === 0 ? (c.n ? "Covered" : fmt.format(state.pay)) : fmt.format(c.leftPay);
+      el.leftPay.classList.toggle("ok", c.leftPay === 0 && c.n > 0);
+    } else {
+      el.payMark.hidden = true;
+      el.payLabel.hidden = true;
+      el.payRow.hidden = true;
+    }
+
+    el.leftGoal.textContent = c.leftGoal === 0 ? "Reached" : fmt.format(c.leftGoal);
+    el.leftGoal.classList.toggle("ok", c.leftGoal === 0);
+    el.runsLeft.textContent = c.runsLeft === 0 ? "Done" : (c.runsLeft == null ? "–" : "About " + c.runsLeft + (c.runsLeft === 1 ? " run" : " runs"));
+    el.crewTake.textContent = fmt.format(c.crewTake);
+
+    // Crew stepper
+    el.crewOut.textContent = state.crew + (state.crew === 1 ? " person" : " people");
+    el.crewMinus.disabled = state.crew <= MIN_CREW;
+    el.crewPlus.disabled = state.crew >= MAX_CREW;
+    updatePreview();
+
+    // Log
+    el.logBody.textContent = "";
+    c.rows.forEach(function (row, i) {
+      var tr = document.createElement("tr");
+      var chip = "";
+      if (i === c.goalHitAt) chip = '<span class="chip">Goal hit</span>';
+      else if (i === c.payHitAt) chip = '<span class="chip pay">Paid back</span>';
+      tr.innerHTML =
+        "<td>" + (i + 1) + "</td>" +
+        '<td class="num">' + fmt.format(row.run.take) + "</td>" +
+        '<td class="num crew">÷' + row.run.crew + "</td>" +
+        '<td class="num cut">' + fmt.format(row.cut) + "</td>" +
+        '<td class="num">' + fmt.format(row.running) + chip + "</td>" +
+        '<td class="rm"><button type="button" class="x" data-id="' + row.run.id + '" aria-label="Remove run ' + (i + 1) + '">×</button></td>';
+      el.logBody.appendChild(tr);
+    });
+    el.logFoot.innerHTML = c.n
+      ? '<tr><td>Total</td><td class="num">' + fmt.format(c.crewTake) + '</td><td></td><td class="num cut">' + fmt.format(c.total) + '</td><td></td><td></td></tr>'
+      : "";
+    el.logTable.hidden = !c.n;
+    el.emptyLog.hidden = !!c.n;
+    el.clearBtn.hidden = !c.n;
+
+    if (lastRemoved) {
+      el.undoWrap.hidden = false;
+      el.undoNum.textContent = String(lastRemoved.index + 1);
+    } else {
+      el.undoWrap.hidden = true;
+    }
+  }
+
+  function updatePreview() {
+    var raw = el.take.value;
+    var n = parseAmount(raw);
+    if (!raw.trim()) {
+      el.each.textContent = "Enter a take";
+      el.each.className = "each empty";
+    } else if (!(n > 0)) {
+      el.each.textContent = "Check the amount";
+      el.each.className = "each empty";
+    } else {
+      el.each.textContent = fmt.format(n / state.crew);
+      el.each.className = "each";
+    }
+  }
+
+  function moneyField(input, hint, key, optional) {
+    input.value = state[key] > 0 ? fmt.format(state[key]) : "";
+    function describe() {
+      var raw = input.value;
+      if (!raw.trim()) {
+        if (optional) {
+          state[key] = 0; hint.textContent = "Leave blank if you don't owe anything."; hint.classList.remove("bad");
+          input.removeAttribute("aria-invalid"); return true;
+        }
+        hint.textContent = "Enter your goal, like 1m or 1,000,000."; hint.classList.add("bad");
+        input.setAttribute("aria-invalid", "true"); return false;
+      }
+      var n = parseAmount(raw);
+      if (!(n > 0)) {
+        hint.textContent = "Use a number like 900k or 900,000."; hint.classList.add("bad");
+        input.setAttribute("aria-invalid", "true"); return false;
+      }
+      state[key] = n;
+      hint.textContent = "= " + fmt.format(n); hint.classList.remove("bad");
+      input.removeAttribute("aria-invalid");
+      return true;
+    }
+    input.addEventListener("input", function () { if (describe()) { save(); render(); } });
+    input.addEventListener("blur", function () {
+      if (state[key] > 0) input.value = fmt.format(state[key]);
+      else if (optional) input.value = "";
+      describe();
+    });
+    describe();
+  }
+
+  moneyField(el.goal, el.goalHint, "goal", false);
+  moneyField(el.pay, el.payHint, "pay", true);
+
+  el.take.addEventListener("input", function () {
+    el.takeError.textContent = "";
+    el.take.removeAttribute("aria-invalid");
+    updatePreview();
+  });
+
+  el.crewMinus.addEventListener("click", function () { state.crew = clampCrew(state.crew - 1); save(); render(); });
+  el.crewPlus.addEventListener("click", function () { state.crew = clampCrew(state.crew + 1); save(); render(); });
+
+  el.addForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var n = parseAmount(el.take.value);
+    if (!(n > 0)) {
+      el.takeError.textContent = "Enter the run's total take, like 280k or 280,000.";
+      el.take.setAttribute("aria-invalid", "true");
+      el.take.focus();
+      return;
+    }
+    if (state.example) { state.runs = []; state.example = false; state.nextId = 1; }
+    state.runs.push({ id: state.nextId++, take: n, crew: state.crew });
+    lastRemoved = null;
+    el.take.value = "";
+    save(); render();
+    el.take.focus();
+  });
+
+  el.logBody.addEventListener("click", function (e) {
+    var btn = e.target.closest("button.x");
+    if (!btn) return;
+    var id = Number(btn.getAttribute("data-id"));
+    var idx = state.runs.findIndex(function (r) { return r.id === id; });
+    if (idx < 0) return;
+    lastRemoved = { run: state.runs[idx], index: idx };
+    state.runs.splice(idx, 1);
+    save(); render();
+  });
+
+  el.undoBtn.addEventListener("click", function () {
+    if (!lastRemoved) return;
+    state.runs.splice(lastRemoved.index, 0, lastRemoved.run);
+    lastRemoved = null;
+    save(); render();
+  });
+
+  el.clearBtn.addEventListener("click", function () {
+    if (el.clearBtn.dataset.armed === "1") {
+      clearTimeout(clearTimer);
+      el.clearBtn.dataset.armed = "";
+      el.clearBtn.textContent = "Clear all runs";
+      el.clearBtn.classList.remove("danger");
+      state.runs = []; state.example = false; lastRemoved = null;
+      save(); render();
+      el.take.focus();
+      return;
+    }
+    el.clearBtn.dataset.armed = "1";
+    el.clearBtn.textContent = "Tap again to clear";
+    el.clearBtn.classList.add("danger");
+    clearTimer = setTimeout(function () {
+      el.clearBtn.dataset.armed = "";
+      el.clearBtn.textContent = "Clear all runs";
+      el.clearBtn.classList.remove("danger");
+    }, 3000);
+  });
+
+  el.startEmpty.addEventListener("click", function () {
+    state.runs = []; state.example = false; lastRemoved = null; state.nextId = 1;
+    save(); render();
+    el.take.focus();
+  });
+
+  function summaryText() {
+    var c = compute(state);
+    var lines = ["ROB RUN split"];
+    lines.push("Runs: " + c.n + " · Crew take: " + fmt.format(c.crewTake));
+    lines.push("My cut: " + fmt.format(c.total));
+    lines.push("Goal " + fmt.format(state.goal) + ": " + (c.leftGoal === 0 ? "reached" + (c.total > state.goal ? " (+" + fmt.format(c.total - state.goal) + ")" : "") : fmt.format(c.leftGoal) + " to go"));
+    if (state.pay > 0) {
+      lines.push("Pay back " + fmt.format(state.pay) + ": " + (c.leftPay === 0 ? "covered" : fmt.format(c.leftPay) + " to go"));
+    }
+    return lines.join("\n");
+  }
+
+  el.copyBtn.addEventListener("click", function () {
+    var text = summaryText();
+    el.copyFallback.hidden = true;
+    function fallback() {
+      el.copyFallback.value = text;
+      el.copyFallback.hidden = false;
+      el.copyFallback.focus();
+      el.copyFallback.select();
+      el.copyMsg.textContent = "Copy the text below.";
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          el.copyMsg.textContent = "Copied. Paste it in your crew chat.";
+          setTimeout(function () { el.copyMsg.textContent = ""; }, 3000);
+        }, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  });
+
+  render();
+
+})();
+</script>
+</body>
+</html>
