@@ -8,7 +8,7 @@ Calculators, an unlock tree and quick answers for ROB RUN. Fan-made, not affilia
 |---|---|
 | [Split calculator](https://robruntools.github.io/split/) | Live |
 | [Unlock tree](https://robruntools.github.io/upgrades/) | Waiting on data |
-| [Price check](https://robruntools.github.io/items/) | Waiting on data |
+| [Price check](https://robruntools.github.io/items/) | Live (data: [ROB RUN Wiki open data](https://robrunwiki.com/en/data/)) |
 | [FAQ](https://robruntools.github.io/faq/) | Live |
 
 Plain HTML and CSS, no build step. Shared styles live in `assets/site.css`.

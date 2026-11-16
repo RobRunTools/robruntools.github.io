@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Price Check · ROB RUN Tools</title>
-<meta name="description" content="Look up what a ROB RUN item is worth.">
+<meta name="description" content="Look up what any ROB RUN item sells for at the fence. 373 items, searchable.">
 <meta property="og:title" content="ROB RUN Price Check">
-<meta property="og:description" content="Look up what an item is worth before you sell it.">
+<meta property="og:description" content="Look up what any item sells for at the fence before you sell it.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,31 +14,36 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
-.head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
-.lookup { display: grid; gap: 10px; padding: 18px; border-bottom: 1px solid var(--line); }
+:root { --r-common: #9aa0a8; --r-uncommon: #4cc38a; --r-epic: #a57cf0; --r-legendary: #f0b429; --r-exotic: #ef6161; }
+.lookup { display: grid; gap: 12px; padding: 18px; border-bottom: 1px solid var(--line); }
 #q { height: 52px; font-size: 20px; }
-.cats { display: flex; flex-wrap: wrap; gap: 6px; }
-.chipbtn {
-  height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
-  background: transparent; color: var(--muted); cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-}
-.chipbtn:hover { color: var(--text); border-color: var(--muted); }
-.chipbtn[aria-pressed="true"] { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.filters .field { flex: 1 1 180px; max-width: 260px; }
+.filters select { height: 38px; font-size: 14px; font-family: var(--font-mono); }
 .results { list-style: none; margin: 0; padding: 0; }
-.results li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
-  padding: 12px 18px; border-bottom: 1px solid var(--line);
-}
+.results li { border-bottom: 1px solid var(--line); }
 .results li:last-child { border-bottom: 0; }
+.results a {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
+  padding: 12px 18px; color: var(--text); text-decoration: none;
+  border-left: 3px solid var(--rc, var(--line));
+}
+.results a:hover { background: #1a1d22; }
 .results .nm { font-weight: 500; }
-.results .meta { font-size: 13px; color: var(--muted); }
-.results .price { font-family: var(--font-mono); font-size: 18px; color: var(--accent); font-variant-numeric: tabular-nums; text-align: right; }
-.results .price small { display: block; font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.results .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 3px; font-size: 13px; color: var(--muted); }
+.rar { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc, var(--muted)); }
+.price { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.price .hi { display: block; font-size: 18px; color: var(--accent); }
+.price .lo { display: block; font-size: 12px; color: var(--muted); }
+.r-common { --rc: var(--r-common); }
+.r-uncommon { --rc: var(--r-uncommon); }
+.r-epic { --rc: var(--r-epic); }
+.r-legendary { --rc: var(--r-legendary); }
+.r-exotic { --rc: var(--r-exotic); }
 .count { margin: 0; padding: 10px 18px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
 .empty { padding: 22px 18px; margin: 0; color: var(--muted); }
+.src { margin: 0; font-size: 13px; color: var(--muted); }
 .wip-body { display: grid; gap: 12px; }
-.src { margin: 0; font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -56,11 +61,8 @@
 
 <main class="page">
   <header class="page-head">
-    <div class="head-row">
-      <h1>Price check</h1>
-      <span class="tag accent" id="wipTag" hidden>Under construction</span>
-    </div>
-    <p class="sub">Type an item, see what it's worth.</p>
+    <h1>Price check</h1>
+    <p class="sub">Type an item and see what the fence pays for it. The low number is a normal sale, the high number is the most you'll get.</p>
   </header>
 
   <div id="app"><p class="empty">Loading prices...</p></div>
@@ -68,75 +70,72 @@
 
 <footer class="foot">
   <div class="foot-in">
-    <span>Prices move with patches and Notoriety. Treat these as a guide.</span>
+    <span>Prices move with patches. Treat them as a guide.</span>
     <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
   </div>
 </footer>
-
-<template id="wipTpl">
-  <section class="panel wip">
-    <div class="wip-body">
-      <p class="wip-note">We're still putting the price list together. Once it's in, you'll type an item and see what it goes for.</p>
-      <input type="search" disabled placeholder="Search items" aria-label="Search items (coming soon)">
-    </div>
-  </section>
-</template>
 
 <script>
 (function () {
   "use strict";
   var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
   var app = document.getElementById("app");
+  var RANK = { Common: 1, Uncommon: 2, Epic: 3, Legendary: 4, Exotic: 5 };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-
-  function showWip(note) {
-    document.getElementById("wipTag").hidden = false;
-    app.innerHTML = "";
-    app.appendChild(document.getElementById("wipTpl").content.cloneNode(true));
-    if (note) { var p = document.createElement("p"); p.className = "src"; p.style.marginTop = "12px"; p.textContent = note; app.appendChild(p); }
-  }
 
   fetch("../data/items.json", { cache: "no-cache" })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (d) { if (!d || !Array.isArray(d.items) || !d.items.length) showWip(); else mount(d); })
-    .catch(function () { showWip("Couldn't load prices. Refresh to try again."); });
+    .then(function (d) {
+      if (!d || !Array.isArray(d.items) || !d.items.length) { app.innerHTML = '<section class="panel wip"><p class="wip-note">The price list is being updated. Check back soon.</p></section>'; return; }
+      mount(d);
+    })
+    .catch(function () { app.innerHTML = '<p class="empty">Couldn\'t load prices. Refresh to try again.</p>'; });
 
   function mount(d) {
-    var items = d.items.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var items = d.items;
     var cats = [];
     items.forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
     cats.sort();
-    var cat = "";
     app.innerHTML =
       '<section class="panel">' +
       '<div class="lookup">' +
       '<label for="q" style="position:absolute;left:-9999px">Search items</label>' +
-      '<input type="search" id="q" placeholder="Search items, e.g. laptop" autocomplete="off" spellcheck="false">' +
-      '<div class="cats" id="cats"><button type="button" class="chipbtn" data-cat="" aria-pressed="true">All</button>' +
-      cats.map(function (c) { return '<button type="button" class="chipbtn" data-cat="' + esc(c) + '" aria-pressed="false">' + esc(c) + "</button>"; }).join("") +
+      '<input type="search" id="q" placeholder="Search, e.g. gold bar, laptop, ring" autocomplete="off" spellcheck="false">' +
+      '<div class="filters">' +
+      '<div class="field"><label for="cat">Type</label><select id="cat"><option value="">Everything</option>' +
+      cats.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("") + "</select></div>" +
+      '<div class="field"><label for="sort">Sort</label><select id="sort"><option value="value">Worth the most</option><option value="name">Name A–Z</option><option value="rarity">Rarity</option></select></div>' +
       "</div></div>" +
       '<ul class="results" id="results"></ul>' +
       '<p class="count" id="count"></p></section>' +
-      (d.updated || d.source ? '<p class="src" style="margin-top:12px">' + (d.updated ? "Last checked " + esc(d.updated) + ". " : "") + (d.source ? "Source: " + esc(d.source) + "." : "") + "</p>" : "");
-    var q = document.getElementById("q"), res = document.getElementById("results"), count = document.getElementById("count"), catsEl = document.getElementById("cats");
+      '<p class="src" style="margin-top:12px">Data: <a href="' + esc(d.sourceUrl) + '">ROB RUN Wiki</a>, an unofficial wiki for ROB RUN, from game version ' + esc(d.version) + ". " + esc(d.note || "") + " Click an item for its full page there.</p>";
+    var q = document.getElementById("q"), cat = document.getElementById("cat"), sort = document.getElementById("sort");
+    var res = document.getElementById("results"), count = document.getElementById("count");
     function render() {
-      var term = q.value.trim().toLowerCase();
+      var terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      var c = cat.value, s = sort.value;
       var list = items.filter(function (it) {
-        return (!cat || it.category === cat) && (!term || it.name.toLowerCase().indexOf(term) >= 0 || (it.category || "").toLowerCase().indexOf(term) >= 0);
+        if (c && it.category !== c) return false;
+        var hay = (it.name + " " + it.category + " " + it.rarity).toLowerCase();
+        return terms.every(function (t) { return hay.indexOf(t) >= 0; });
       });
-      res.innerHTML = list.slice(0, 200).map(function (it) {
-        return '<li><div><div class="nm">' + esc(it.name) + '</div><div class="meta">' + esc(it.category || "") + (it.note ? " · " + esc(it.note) : "") + "</div></div>" +
-          '<div class="price">' + (it.price > 0 ? "$" + fmt.format(it.price) : "–") + (it.priceLabel ? "<small>" + esc(it.priceLabel) + "</small>" : "") + "</div></li>";
-      }).join("") || '<li class="empty">Nothing matches that.</li>';
-      count.textContent = list.length + (list.length === 1 ? " item" : " items") + (list.length > 200 ? " (showing 200)" : "");
+      list.sort(function (a, b) {
+        if (s === "name") return a.name.localeCompare(b.name) || a.max - b.max;
+        if (s === "rarity") return (RANK[b.rarity] || 0) - (RANK[a.rarity] || 0) || b.max - a.max;
+        return b.max - a.max || a.name.localeCompare(b.name);
+      });
+      var shown = list.slice(0, 150);
+      res.innerHTML = shown.map(function (it) {
+        var url = d.itemUrl.replace("{id}", encodeURIComponent(it.id));
+        return '<li><a class="r-' + esc((it.rarity || "").toLowerCase()) + '" href="' + esc(url) + '" target="_blank" rel="noopener">' +
+          '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="rar">' + esc(it.rarity || "–") + "</span><span>" + esc(it.category) + "</span></div></div>" +
+          '<div class="price"><span class="hi">$' + fmt.format(it.max) + '</span><span class="lo">from $' + fmt.format(it.min) + "</span></div></a></li>";
+      }).join("") || '<li class="empty">Nothing matches that. Try one word, like "watch".</li>';
+      count.textContent = list.length + (list.length === 1 ? " item" : " items") + (list.length > shown.length ? " · showing the first " + shown.length + ", search to narrow it down" : "");
     }
     q.addEventListener("input", render);
-    catsEl.addEventListener("click", function (e) {
-      var b = e.target.closest("button[data-cat]"); if (!b) return;
-      cat = b.getAttribute("data-cat");
-      [].forEach.call(catsEl.children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
-      render();
-    });
+    cat.addEventListener("change", render);
+    sort.addEventListener("change", render);
     render();
     try { if (window.matchMedia("(pointer: fine)").matches) q.focus(); } catch (e) { /* ignore */ }
   }
