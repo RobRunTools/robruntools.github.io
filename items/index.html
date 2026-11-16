@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Price Check · ROB RUN Tools</title>
-<meta name="description" content="Look up what any ROB RUN item sells for at the fence. 373 items, searchable.">
+<meta name="description" content="Look up what any ROB RUN item sells for at the fence, add up your haul and split it with your crew.">
 <meta property="og:title" content="ROB RUN Price Check">
-<meta property="og:description" content="Look up what any item sells for at the fence before you sell it.">
+<meta property="og:description" content="Look up what any item sells for, add up your haul and split it with your crew.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,35 +15,95 @@
 <link rel="stylesheet" href="../assets/site.css">
 <style>
 :root { --r-common: #9aa0a8; --r-uncommon: #4cc38a; --r-epic: #a57cf0; --r-legendary: #f0b429; --r-exotic: #ef6161; }
-.lookup { display: grid; gap: 12px; padding: 18px; border-bottom: 1px solid var(--line); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.layout > * { min-width: 0; }
+.lookup { display: grid; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
 #q { height: 52px; font-size: 20px; }
-.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
-.filters .field { flex: 1 1 180px; max-width: 260px; }
-.filters select { height: 38px; font-size: 14px; font-family: var(--font-mono); }
-.results { list-style: none; margin: 0; padding: 0; }
-.results li { border-bottom: 1px solid var(--line); }
-.results li:last-child { border-bottom: 0; }
-.results a {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
-  padding: 12px 18px; color: var(--text); text-decoration: none;
-  border-left: 3px solid var(--rc, var(--line));
+.filters { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: end; }
+.filters .field { flex: 1 1 160px; max-width: 220px; }
+.filters select { height: 36px; font-size: 13px; font-family: var(--font-mono); }
+.rars { display: flex; flex-wrap: wrap; gap: 6px; }
+.rchip {
+  height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: transparent; cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc, var(--muted));
 }
-.results a:hover { background: #1a1d22; }
-.results .nm { font-weight: 500; }
-.results .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 3px; font-size: 13px; color: var(--muted); }
+.rchip[aria-pressed="true"] { border-color: var(--rc, var(--accent)); background: rgba(255, 255, 255, 0.04); }
+.rchip.all { --rc: var(--text); }
+.results { list-style: none; margin: 0; padding: 0; }
+.results > li { border-bottom: 1px solid var(--line); border-left: 3px solid var(--rc, var(--line)); }
+.results > li:last-child { border-bottom: 0; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 4px 12px; }
+.row .open {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center;
+  padding: 11px 6px 11px 16px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit;
+}
+.row .open:hover .nm { color: var(--accent); }
+.nm { font-weight: 500; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin-top: 2px; font-size: 13px; color: var(--muted); }
 .rar { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc, var(--muted)); }
 .price { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.price .hi { display: block; font-size: 18px; color: var(--accent); }
+.price .hi { display: block; font-size: 17px; color: var(--accent); }
 .price .lo { display: block; font-size: 12px; color: var(--muted); }
-.r-common { --rc: var(--r-common); }
-.r-uncommon { --rc: var(--r-uncommon); }
-.r-epic { --rc: var(--r-epic); }
-.r-legendary { --rc: var(--r-legendary); }
-.r-exotic { --rc: var(--r-exotic); }
-.count { margin: 0; padding: 10px 18px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
-.empty { padding: 22px 18px; margin: 0; color: var(--muted); }
-.src { margin: 0; font-size: 13px; color: var(--muted); }
-.wip-body { display: grid; gap: 12px; }
+.add {
+  width: 36px; height: 36px; margin-right: 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent;
+  color: var(--text); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.add:hover { border-color: var(--accent); color: var(--accent); }
+.add.in { border-color: rgba(240, 180, 41, 0.6); color: var(--accent); font-family: var(--font-mono); font-size: 13px; }
+.more { display: grid; gap: 10px; padding: 2px 16px 16px; font-size: 14px; color: #c9ccd2; }
+.more .facts { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+.more .fact { display: grid; gap: 2px; }
+.more .fact .v { font-family: var(--font-mono); font-size: 15px; color: var(--text); }
+.more .note { margin: 0; color: var(--muted); font-size: 13px; }
+.more .note.hot { color: var(--good); }
+.more .links { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+.r-common { --rc: var(--r-common); } .r-uncommon { --rc: var(--r-uncommon); } .r-epic { --rc: var(--r-epic); }
+.r-legendary { --rc: var(--r-legendary); } .r-exotic { --rc: var(--r-exotic); }
+.count { margin: 0; padding: 10px 16px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
+.count button { margin-left: 8px; }
+.empty { padding: 22px 16px; margin: 0; color: var(--muted); }
+.src { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+
+/* Haul */
+.haul { position: sticky; top: 72px; display: grid; gap: 14px; padding: 16px; }
+.haul-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 40vh; overflow: auto; }
+.haul-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 14px; padding-left: 8px; border-left: 2px solid var(--rc, var(--line)); }
+.haul-list .hn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.haul-list .hv { display: block; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 3px; }
+.qty button { width: 26px; height: 26px; border: 0; background: transparent; color: var(--text); cursor: pointer; font-size: 15px; }
+.qty button:hover { color: var(--accent); }
+.qty input { width: 34px; height: 26px; border: 0; background: transparent; color: var(--text); text-align: center; font-family: var(--font-mono); font-size: 13px; padding: 0; }
+.haul-list .x { width: 24px; height: 24px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
+.haul-list .x:hover { color: var(--bad); }
+.hsum { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.hrow { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; }
+.hrow .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.hrow.big .v { font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--accent); }
+.stepper { display: inline-flex; align-items: center; height: 32px; border: 1px solid var(--line); border-radius: 4px; background: var(--field); }
+.stepper button { width: 30px; height: 100%; border: 0; background: transparent; color: var(--text); font-size: 16px; cursor: pointer; }
+.stepper output { min-width: 26px; text-align: center; font-family: var(--font-mono); font-size: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { height: 32px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--field); color: var(--accent); }
+.haul .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hmsg { font-size: 13px; color: var(--muted); }
+.hmsg:empty { display: none; }
+.haul-empty { margin: 0; color: var(--muted); font-size: 14px; }
+.bagbar {
+  display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30;
+  padding: 12px 14px; border: 1px solid rgba(240, 180, 41, 0.5); border-radius: 6px; background: #17150f;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  justify-content: space-between; align-items: center; gap: 10px;
+}
+.bagbar .v { font-family: var(--font-mono); color: var(--accent); }
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .haul { position: static; }
+  .bagbar.show { display: flex; }
+  body.has-bag .page { padding-bottom: 90px; }
+}
 </style>
 </head>
 <body>
@@ -62,15 +122,16 @@
 <main class="page">
   <header class="page-head">
     <h1>Price check</h1>
-    <p class="sub">Type an item and see what the fence pays for it. The low number is a normal sale, the high number is the most you'll get.</p>
+    <p class="sub">Search an item to see what the fence pays. Hit + to add it to your haul, and it adds everything up and splits it with your crew.</p>
   </header>
-
   <div id="app"><p class="empty">Loading prices...</p></div>
 </main>
 
+<button type="button" class="bagbar" id="bagbar"><span id="bagbarText">Haul</span><span class="v" id="bagbarVal"></span></button>
+
 <footer class="foot">
   <div class="foot-in">
-    <span>Prices move with patches. Treat them as a guide.</span>
+    <span>The fence pays more with higher Notoriety. Treat these as a guide.</span>
     <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
   </div>
 </footer>
@@ -78,66 +139,236 @@
 <script>
 (function () {
   "use strict";
+  var HAUL_KEY = "robrun-haul-v1", SPLIT_KEY = "robrun-split-v1";
   var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
-  var app = document.getElementById("app");
   var RANK = { Common: 1, Uncommon: 2, Epic: 3, Legendary: 4, Exotic: 5 };
+  var RARITIES = ["Common", "Uncommon", "Epic", "Legendary", "Exotic"];
+  var app = document.getElementById("app");
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function money(n) { return "$" + fmt.format(Math.round(n)); }
+  function hashOf(id) { return id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+  function rc(it) { return "r-" + (it.rarity || "").toLowerCase(); }
 
-  fetch("../data/items.json", { cache: "no-cache" })
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function (d) {
-      if (!d || !Array.isArray(d.items) || !d.items.length) { app.innerHTML = '<section class="panel wip"><p class="wip-note">The price list is being updated. Check back soon.</p></section>'; return; }
-      mount(d);
-    })
-    .catch(function () { app.innerHTML = '<p class="empty">Couldn\'t load prices. Refresh to try again.</p>'; });
+  function loadHaul() {
+    try {
+      var o = JSON.parse(localStorage.getItem(HAUL_KEY) || "null");
+      if (o && typeof o === "object") return { items: o.items && typeof o.items === "object" ? o.items : {}, crew: Math.max(1, Math.min(12, Number(o.crew) || 0)) || null, basis: o.basis || "mid" };
+    } catch (e) { /* ignore */ }
+    return { items: {}, crew: null, basis: "mid" };
+  }
+  function saveHaul() { try { localStorage.setItem(HAUL_KEY, JSON.stringify(haul)); } catch (e) { /* ignore */ } }
+  function splitCrew() { try { var s = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null"); return s && s.crew ? Number(s.crew) : 3; } catch (e) { return 3; } }
 
-  function mount(d) {
-    var items = d.items;
+  var haul = loadHaul();
+  if (!haul.crew) haul.crew = splitCrew();
+  var items = [], byId = {}, ships = {}, open = null, showAll = false, rarity = "", src = {};
+
+  Promise.all([
+    fetch("../data/items.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch("../data/shipments.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : { items: [] }; }).catch(function () { return { items: [] }; })
+  ]).then(function (res) {
+    var d = res[0];
+    if (!d || !Array.isArray(d.items) || !d.items.length) throw new Error("empty");
+    src = d;
+    items = d.items;
+    items.forEach(function (it) { byId[it.id] = it; });
+    (res[1].items || []).forEach(function (s) { ships[s.id] = s; });
+    Object.keys(haul.items).forEach(function (id) { if (!byId[id]) delete haul.items[id]; });
+    mount();
+  }).catch(function () { app.innerHTML = '<p class="empty">Couldn\'t load prices. Refresh to try again.</p>'; });
+
+  var el = {};
+  function mount() {
     var cats = [];
     items.forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
     cats.sort();
     app.innerHTML =
-      '<section class="panel">' +
+      '<div class="layout"><section class="panel">' +
       '<div class="lookup">' +
       '<label for="q" style="position:absolute;left:-9999px">Search items</label>' +
       '<input type="search" id="q" placeholder="Search, e.g. gold bar, laptop, ring" autocomplete="off" spellcheck="false">' +
       '<div class="filters">' +
       '<div class="field"><label for="cat">Type</label><select id="cat"><option value="">Everything</option>' +
       cats.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("") + "</select></div>" +
-      '<div class="field"><label for="sort">Sort</label><select id="sort"><option value="value">Worth the most</option><option value="name">Name A–Z</option><option value="rarity">Rarity</option></select></div>' +
+      '<div class="field"><label for="sort">Sort</label><select id="sort"><option value="value">Worth the most</option><option value="low">Worth the least</option><option value="name">Name A–Z</option><option value="rarity">Rarity</option></select></div>' +
+      "</div>" +
+      '<div class="rars" id="rars" role="group" aria-label="Rarity"><button type="button" class="rchip all" data-r="" aria-pressed="true">All</button>' +
+      RARITIES.map(function (r) { return '<button type="button" class="rchip r-' + r.toLowerCase() + '" data-r="' + r + '" aria-pressed="false">' + r + "</button>"; }).join("") +
       "</div></div>" +
-      '<ul class="results" id="results"></ul>' +
-      '<p class="count" id="count"></p></section>' +
-      '<p class="src" style="margin-top:12px">Data: <a href="' + esc(d.sourceUrl) + '">ROB RUN Wiki</a>, an unofficial wiki for ROB RUN, from game version ' + esc(d.version) + ". " + esc(d.note || "") + " Click an item for its full page there.</p>";
-    var q = document.getElementById("q"), cat = document.getElementById("cat"), sort = document.getElementById("sort");
-    var res = document.getElementById("results"), count = document.getElementById("count");
-    function render() {
-      var terms = q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-      var c = cat.value, s = sort.value;
-      var list = items.filter(function (it) {
-        if (c && it.category !== c) return false;
-        var hay = (it.name + " " + it.category + " " + it.rarity).toLowerCase();
-        return terms.every(function (t) { return hay.indexOf(t) >= 0; });
-      });
-      list.sort(function (a, b) {
-        if (s === "name") return a.name.localeCompare(b.name) || a.max - b.max;
-        if (s === "rarity") return (RANK[b.rarity] || 0) - (RANK[a.rarity] || 0) || b.max - a.max;
-        return b.max - a.max || a.name.localeCompare(b.name);
-      });
-      var shown = list.slice(0, 150);
-      res.innerHTML = shown.map(function (it) {
-        var url = d.itemUrl.replace("{id}", encodeURIComponent(it.id));
-        return '<li><a class="r-' + esc((it.rarity || "").toLowerCase()) + '" href="' + esc(url) + '" target="_blank" rel="noopener">' +
-          '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="rar">' + esc(it.rarity || "–") + "</span><span>" + esc(it.category) + "</span></div></div>" +
-          '<div class="price"><span class="hi">$' + fmt.format(it.max) + '</span><span class="lo">from $' + fmt.format(it.min) + "</span></div></a></li>";
-      }).join("") || '<li class="empty">Nothing matches that. Try one word, like "watch".</li>';
-      count.textContent = list.length + (list.length === 1 ? " item" : " items") + (list.length > shown.length ? " · showing the first " + shown.length + ", search to narrow it down" : "");
+      '<ul class="results" id="results"></ul><p class="count" id="count"></p></section>' +
+      '<aside class="panel haul" id="haulPanel" aria-labelledby="haulTitle">' +
+      '<h2 class="panel-title" id="haulTitle">Your haul</h2>' +
+      '<ul class="haul-list" id="haulList"></ul>' +
+      '<p class="haul-empty" id="haulEmpty">Nothing yet. Hit + on anything you grabbed.</p>' +
+      '<div class="hsum" id="hsum">' +
+      '<div class="hrow"><span class="label">Fence pays</span><span class="v" id="hRange">$0</span></div>' +
+      '<div class="hrow"><span class="label">Split</span><span class="stepper"><button type="button" id="cMinus" aria-label="One less person">−</button><output id="cOut">3</output><button type="button" id="cPlus" aria-label="One more person">+</button></span></div>' +
+      '<div class="hrow big"><span class="label">Each gets</span><span class="v" id="hEach">$0</span></div>' +
+      '<div class="hrow"><span class="label">Count it at</span><span class="seg" id="basis" role="group" aria-label="Which price to use"><button type="button" data-b="low">Low</button><button type="button" data-b="mid">Mid</button><button type="button" data-b="high">High</button></span></div>' +
+      "</div>" +
+      '<div class="actions"><button type="button" class="btn small primary" id="logRun">Log as a run</button><button type="button" class="btn small" id="copyHaul">Copy for Discord</button><button type="button" class="btn small" id="clearHaul">Clear</button></div>' +
+      '<span class="hmsg" id="hmsg" role="status"></span>' +
+      "</aside></div>" +
+      '<p class="src">Prices: <a href="' + esc(src.sourceUrl) + '">ROB RUN Wiki</a> open data, game version ' + esc(src.version) + ". Unlock costs: robrungame.com. " + esc(src.note || "") + "</p>";
+    ["q", "cat", "sort", "rars", "results", "count", "haulList", "haulEmpty", "hsum", "hRange", "cOut", "cMinus", "cPlus", "hEach", "basis", "logRun", "copyHaul", "clearHaul", "hmsg", "haulPanel"]
+      .forEach(function (id) { el[id] = document.getElementById(id); });
+    el.bagbar = document.getElementById("bagbar");
+    el.bagbarText = document.getElementById("bagbarText");
+    el.bagbarVal = document.getElementById("bagbarVal");
+
+    el.q.addEventListener("input", function () { showAll = false; render(); });
+    el.cat.addEventListener("change", function () { showAll = false; render(); });
+    el.sort.addEventListener("change", render);
+    el.rars.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-r]"); if (!b) return;
+      rarity = b.getAttribute("data-r"); showAll = false;
+      [].forEach.call(el.rars.children, function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+      render();
+    });
+    el.results.addEventListener("click", function (e) {
+      var add = e.target.closest("button[data-add]");
+      if (add) { var id = add.getAttribute("data-add"); haul.items[id] = (haul.items[id] || 0) + 1; saveHaul(); render(); renderHaul(); flash(); return; }
+      var o = e.target.closest("button[data-open]");
+      if (o) { var oid = o.getAttribute("data-open"); open = open === oid ? null : oid; render(); }
+    });
+    el.count.addEventListener("click", function (e) { if (e.target.closest("button[data-all]")) { showAll = true; render(); } });
+    el.haulList.addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-q]"); if (!b) return;
+      var id = b.getAttribute("data-id"), dq = Number(b.getAttribute("data-q"));
+      var n = (haul.items[id] || 0) + dq;
+      if (dq === 0 || n <= 0) delete haul.items[id]; else haul.items[id] = n;
+      saveHaul(); render(); renderHaul();
+    });
+    el.haulList.addEventListener("change", function (e) {
+      var inp = e.target.closest("input[data-id]"); if (!inp) return;
+      var n = Math.max(0, Math.min(999, Math.round(Number(inp.value) || 0)));
+      if (n) haul.items[inp.getAttribute("data-id")] = n; else delete haul.items[inp.getAttribute("data-id")];
+      saveHaul(); render(); renderHaul();
+    });
+    el.cMinus.addEventListener("click", function () { haul.crew = Math.max(1, haul.crew - 1); saveHaul(); renderHaul(); });
+    el.cPlus.addEventListener("click", function () { haul.crew = Math.min(12, haul.crew + 1); saveHaul(); renderHaul(); });
+    el.basis.addEventListener("click", function (e) { var b = e.target.closest("button[data-b]"); if (!b) return; haul.basis = b.getAttribute("data-b"); saveHaul(); renderHaul(); });
+    el.clearHaul.addEventListener("click", function () { haul.items = {}; saveHaul(); render(); renderHaul(); });
+    el.logRun.addEventListener("click", logRun);
+    el.copyHaul.addEventListener("click", copyHaul);
+    el.bagbar.addEventListener("click", function () { el.haulPanel.scrollIntoView({ behavior: "smooth", block: "start" }); });
+    render(); renderHaul();
+    try { if (window.matchMedia("(pointer: fine)").matches) el.q.focus(); } catch (e) { /* ignore */ }
+  }
+
+  function render() {
+    var terms = el.q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    var c = el.cat.value, s = el.sort.value;
+    var list = items.filter(function (it) {
+      if (c && it.category !== c) return false;
+      if (rarity && it.rarity !== rarity) return false;
+      var hay = (it.name + " " + it.category + " " + it.rarity).toLowerCase();
+      return terms.every(function (t) { return hay.indexOf(t) >= 0; });
+    });
+    list.sort(function (a, b) {
+      if (s === "name") return a.name.localeCompare(b.name) || a.max - b.max;
+      if (s === "rarity") return (RANK[b.rarity] || 0) - (RANK[a.rarity] || 0) || b.max - a.max;
+      if (s === "low") return a.max - b.max || a.name.localeCompare(b.name);
+      return b.max - a.max || a.name.localeCompare(b.name);
+    });
+    var limit = showAll ? list.length : 60, shown = list.slice(0, limit);
+    el.results.innerHTML = shown.map(rowHtml).join("") || '<li class="empty">Nothing matches that. Try one word, like "watch".</li>';
+    el.count.innerHTML = list.length + (list.length === 1 ? " item" : " items") +
+      (list.length > shown.length ? ' · showing ' + shown.length + '<button type="button" class="linkish" data-all="1">Show all</button>' : "");
+  }
+
+  function rowHtml(it) {
+    var inHaul = haul.items[it.id] || 0, isOpen = open === it.id;
+    var more = "";
+    if (isOpen) {
+      var sh = ships[it.id];
+      var shipLine = "";
+      if (sh) {
+        shipLine = '<div class="facts">' +
+          '<div class="fact"><span class="label">Unlock</span><span class="v">' + (sh.unlock ? money(sh.unlock) : "Free") + "</span></div>" +
+          '<div class="fact"><span class="label">Black Market</span><span class="v">' + (sh.buy ? money(sh.buy) : "–") + "</span></div>" +
+          '<div class="fact"><span class="label">Tier</span><span class="v">' + esc(sh.tier) + "</span></div>" +
+          (sh.jail ? '<div class="fact"><span class="label">Jail time</span><span class="v">' + sh.jail + " yrs</span></div>" : "") +
+          "</div>";
+        if (sh.buy && it.max > sh.buy) shipLine += '<p class="note hot">The fence can pay up to ' + money(it.max) + " for one, more than the " + money(sh.buy) + " it costs on the Black Market.</p>";
+        else if (sh.buy) shipLine += '<p class="note">Costs ' + money(sh.buy) + " on the Black Market, the fence pays " + money(it.min) + "–" + money(it.max) + ".</p>";
+      }
+      more = '<div class="more">' +
+        '<div class="facts">' +
+        '<div class="fact"><span class="label">Fence (low)</span><span class="v">' + money(it.min) + "</span></div>" +
+        '<div class="fact"><span class="label">Fence (high)</span><span class="v">' + money(it.max) + "</span></div>" +
+        '<div class="fact"><span class="label">Rarity</span><span class="v rar">' + esc(it.rarity || "–") + "</span></div>" +
+        '<div class="fact"><span class="label">Type</span><span class="v">' + esc(it.category) + "</span></div>" +
+        "</div>" + shipLine +
+        '<div class="links">' + (sh ? '<a href="../upgrades/#' + hashOf(it.id) + '">See it in the unlock tree →</a>' : "") +
+        '<a href="' + esc(src.itemUrl.replace("{id}", encodeURIComponent(it.id))) + '" target="_blank" rel="noopener">Full page on ROB RUN Wiki ↗</a></div></div>';
     }
-    q.addEventListener("input", render);
-    cat.addEventListener("change", render);
-    sort.addEventListener("change", render);
-    render();
-    try { if (window.matchMedia("(pointer: fine)").matches) q.focus(); } catch (e) { /* ignore */ }
+    return '<li class="' + rc(it) + '"><div class="row">' +
+      '<button type="button" class="open" data-open="' + esc(it.id) + '" aria-expanded="' + isOpen + '">' +
+      '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="rar">' + esc(it.rarity || "–") + "</span><span>" + esc(it.category) + "</span>" + (ships[it.id] ? "<span>· unlockable</span>" : "") + "</div></div>" +
+      '<div class="price"><span class="hi">' + money(it.max) + '</span><span class="lo">from ' + money(it.min) + "</span></div></button>" +
+      '<button type="button" class="add' + (inHaul ? " in" : "") + '" data-add="' + esc(it.id) + '" aria-label="Add ' + esc(it.name) + ' to haul">' + (inHaul ? "×" + inHaul : "+") + "</button>" +
+      "</div>" + more + "</li>";
+  }
+
+  function haulTotals() {
+    var lo = 0, hi = 0, count = 0;
+    Object.keys(haul.items).forEach(function (id) { var it = byId[id], q = haul.items[id]; if (!it) return; lo += it.min * q; hi += it.max * q; count += q; });
+    var pick = haul.basis === "low" ? lo : haul.basis === "high" ? hi : (lo + hi) / 2;
+    return { lo: lo, hi: hi, count: count, pick: pick };
+  }
+
+  function renderHaul() {
+    var ids = Object.keys(haul.items);
+    el.haulList.innerHTML = ids.map(function (id) {
+      var it = byId[id], q = haul.items[id];
+      return '<li class="' + rc(it) + '"><span><span class="hn">' + esc(it.name) + '</span><span class="hv">' + money(it.min * q) + "–" + money(it.max * q) + "</span></span>" +
+        '<span class="qty"><button type="button" data-id="' + esc(id) + '" data-q="-1" aria-label="One less">−</button><input type="text" inputmode="numeric" value="' + q + '" data-id="' + esc(id) + '" aria-label="How many ' + esc(it.name) + '"><button type="button" data-id="' + esc(id) + '" data-q="1" aria-label="One more">+</button></span>' +
+        '<button type="button" class="x" data-id="' + esc(id) + '" data-q="0" aria-label="Remove ' + esc(it.name) + '">×</button></li>';
+    }).join("");
+    var t = haulTotals();
+    el.haulEmpty.hidden = !!ids.length;
+    el.hRange.textContent = t.count ? money(t.lo) + " – " + money(t.hi) : "$0";
+    el.cOut.textContent = String(haul.crew);
+    el.cMinus.disabled = haul.crew <= 1; el.cPlus.disabled = haul.crew >= 12;
+    el.hEach.textContent = money(t.pick / haul.crew);
+    [].forEach.call(el.basis.children, function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-b") === haul.basis)); });
+    el.logRun.disabled = !t.count; el.copyHaul.disabled = !t.count; el.clearHaul.disabled = !t.count;
+    el.bagbar.classList.toggle("show", !!t.count);
+    document.body.classList.toggle("has-bag", !!t.count);
+    el.bagbarText.textContent = "Haul: " + t.count + (t.count === 1 ? " item" : " items");
+    el.bagbarVal.textContent = money(t.pick / haul.crew) + " each →";
+  }
+
+  function flash() { el.hmsg.textContent = ""; }
+
+  function logRun() {
+    var t = haulTotals();
+    if (!t.count) return;
+    var s;
+    try { s = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null"); } catch (e) { s = null; }
+    if (!s || !Array.isArray(s.runs)) s = { goal: 1000000, pay: 0, fee: 0, crew: haul.crew, example: false, nextId: 1, wipes: [], runs: [] };
+    if (s.example) { s.runs = []; s.example = false; s.nextId = 1; }
+    var nextId = Math.max(Number(s.nextId) || 1, s.runs.reduce(function (m, r) { return Math.max(m, (Number(r.id) || 0) + 1); }, 1));
+    s.runs.push({ id: nextId, take: Math.round(t.pick), crew: haul.crew, costs: 0, type: "Haul", t: Date.now() });
+    s.nextId = nextId + 1;
+    try {
+      localStorage.setItem(SPLIT_KEY, JSON.stringify(s));
+      el.hmsg.innerHTML = "Logged " + money(t.pick) + ' as a run. <a href="../split/">Open the split calculator →</a>';
+      haul.items = {}; saveHaul(); render(); renderHaul();
+    } catch (e) { el.hmsg.textContent = "Couldn't save the run on this browser."; }
+  }
+
+  function copyHaul() {
+    var t = haulTotals();
+    var lines = ["**ROB RUN haul** (" + t.count + (t.count === 1 ? " item" : " items") + ")"];
+    Object.keys(haul.items).forEach(function (id) { var it = byId[id]; lines.push("• " + haul.items[id] + "× " + it.name + " (" + money(it.min) + "–" + money(it.max) + ")"); });
+    lines.push("Fence pays: " + money(t.lo) + " – " + money(t.hi));
+    lines.push("Split " + haul.crew + " ways: " + money(t.lo / haul.crew) + " – " + money(t.hi / haul.crew) + " each");
+    var text = lines.join("\n");
+    function done(m) { el.hmsg.textContent = m; setTimeout(function () { if (el.hmsg.textContent === m) el.hmsg.textContent = ""; }, 3000); }
+    try { navigator.clipboard.writeText(text).then(function () { done("Copied. Paste it in Discord."); }, function () { done("Couldn't copy here."); }); }
+    catch (e) { done("Couldn't copy here."); }
   }
 })();
 </script>

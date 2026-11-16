@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Unlock Tree · ROB RUN Tools</title>
-<meta name="description" content="Larry's Shipments tree for ROB RUN. Pick what you want and see what it costs to unlock and buy it.">
+<meta name="description" content="Larry's Shipments tree for ROB RUN. Pick what you want and see the unlock cost, Black Market price and everything you need first.">
 <meta property="og:title" content="ROB RUN Unlock Tree">
-<meta property="og:description" content="Pick what you want from Larry's Shipments tree and see what it costs to get there.">
+<meta property="og:description" content="All 172 shipments. Pick what you want and see what it costs to unlock and buy.">
 <meta name="theme-color" content="#0d0e11">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +14,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/site.css">
 <style>
-.head-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+:root { --t1: #4cc38a; --t2: #a57cf0; --t3: #f0b429; --tany: #8c929c; }
+.page { max-width: 1280px; }
+.nav-in, .foot-in { max-width: 1280px; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
 .layout > * { min-width: 0; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .toolbar .search { flex: 1 1 220px; }
-.toolbar input { height: 38px; font-size: 14px; }
-.branches { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.toolbar input[type="search"] { height: 38px; font-size: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button {
+  height: 36px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--field); color: var(--accent); }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.branches { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.branches::-webkit-scrollbar { display: none; }
 .chipbtn {
-  height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
+  flex: none; height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
   background: transparent; color: var(--muted); cursor: pointer;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
 }
@@ -30,89 +44,84 @@
 .chipbtn[aria-pressed="true"] { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); }
 .chipbtn .n { color: var(--muted); margin-left: 4px; }
 
-.tree { list-style: none; margin: 0; padding: 6px 0; }
-.row { border-bottom: 1px solid var(--line); }
-.row:last-child { border-bottom: 0; }
-.row-btn {
-  position: relative;
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 18px 10px calc(18px + var(--d, 0) * 22px);
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
+/* Tree view */
+.canvas-wrap { overflow: auto; max-height: 72vh; min-height: 380px; position: relative; background:
+  radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0) 0 0 / 22px 22px; }
+.canvas { position: relative; margin: 18px; }
+.canvas svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.canvas path { fill: none; stroke: #3a3f48; stroke-width: 1.5; }
+.canvas path.hot { stroke: var(--accent); stroke-width: 2; }
+.canvas path.done { stroke: rgba(76, 195, 138, 0.6); }
+.node {
+  position: absolute; width: 196px; height: 60px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 9px; align-content: center;
+  padding: 7px 10px; border: 1px solid var(--line); border-left: 3px solid var(--tc, var(--tany)); border-radius: 4px;
+  background: var(--panel); color: var(--text); text-align: left; cursor: pointer; font: inherit;
 }
-.row-btn:hover { background: #1a1d22; }
-.row-btn[aria-expanded="true"] { background: #1a1d22; }
-.row-btn.child::before {
-  content: "";
-  position: absolute;
-  left: calc(18px + (var(--d) - 1) * 22px + 7px);
-  top: 0;
-  height: 50%;
-  width: 11px;
-  border-left: 1px solid #3a3f48;
-  border-bottom: 1px solid #3a3f48;
-}
-.tier {
-  min-width: 30px; text-align: center; padding: 1px 0; border: 1px solid var(--line); border-radius: 2px;
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--muted);
-}
-.name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.name .new { margin-left: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--accent); }
-.cost { font-family: var(--font-mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.row.owned .name { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(140, 146, 156, 0.6); }
-.row.owned .tier { border-color: rgba(76, 195, 138, 0.45); color: var(--good); }
-.row.in-plan .tier { border-color: rgba(240, 180, 41, 0.5); color: var(--accent); }
-.row.target .name::after { content: "Target"; margin-left: 8px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.node:hover { border-color: var(--muted); border-left-color: var(--tc, var(--tany)); background: #1b1e24; }
+.node .tb { grid-row: 1 / span 2; align-self: center; min-width: 28px; text-align: center; padding: 1px 0; border: 1px solid var(--tc, var(--line)); border-radius: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--tc, var(--muted)); }
+.node .nm { font-size: 13px; font-weight: 500; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node .cs { font-family: var(--font-mono); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.node .jb { position: absolute; top: -8px; right: 8px; padding: 0 5px; border: 1px solid #ef9b6b; border-radius: 2px; background: var(--bg); font-family: var(--font-mono); font-size: 10px; line-height: 15px; color: #ef9b6b; }
+.node.owned { opacity: 0.55; border-color: rgba(76, 195, 138, 0.5); }
+.node.owned .nm::before { content: "✓ "; color: var(--good); }
+.node.need { border-color: rgba(240, 180, 41, 0.55); background: #1e1b13; }
+.node.target { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.node.sel { outline: 2px solid var(--text); outline-offset: 2px; }
+.node.dim { opacity: 0.25; }
+.t-any { --tc: var(--tany); } .t-1 { --tc: var(--t1); } .t-2 { --tc: var(--t2); } .t-3 { --tc: var(--t3); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; background: var(--tc); vertical-align: -1px; }
 
-.detail { display: grid; gap: 12px; padding: 4px 18px 16px calc(18px + var(--d, 0) * 22px + 40px); }
-.detail[hidden] { display: none; }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px; }
-.fact { display: grid; gap: 3px; }
+/* List view */
+.list { list-style: none; margin: 0; padding: 4px 0; max-height: 72vh; overflow: auto; }
+.list li button {
+  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 10px 14px 10px calc(14px + var(--d, 0) * 18px); border: 0; border-bottom: 1px solid var(--line);
+  background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit;
+}
+.list li button:hover { background: #1a1d22; }
+.list .tb { min-width: 30px; text-align: center; border: 1px solid var(--tc, var(--line)); border-radius: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--tc, var(--muted)); }
+.list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list .cs { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.list li.owned .nm { color: var(--muted); text-decoration: line-through; }
+.list li.need .tb { background: rgba(240, 180, 41, 0.12); }
+.list li.sel button { background: #1e1b13; }
+.empty { padding: 22px 14px; margin: 0; color: var(--muted); }
+
+/* Side */
+.side { display: grid; gap: 16px; position: sticky; top: 72px; }
+.card { padding: 16px; display: grid; gap: 12px; }
+.card h2.title { font-family: var(--font-display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.1; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.fact { display: grid; gap: 2px; }
 .fact .v { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
-.fact .v.warn { color: var(--accent); }
-.detail .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.opens { font-size: 13px; color: var(--muted); }
-
-.plan { display: grid; gap: 14px; padding: 18px; position: sticky; top: 72px; }
-.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.plan-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; }
+.fact .v.big { font-size: 20px; color: var(--accent); }
+.fact.wide { grid-column: 1 / -1; }
+.chain { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.chain b { color: var(--text); font-weight: 500; }
+.chain a { cursor: pointer; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.plan-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.plan-list li button.go { background: none; border: 0; padding: 0; color: var(--text); font: inherit; cursor: pointer; text-align: left; }
+.plan-list li button.go:hover { color: var(--accent); }
 .plan-list .x { width: 26px; height: 26px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
 .plan-list .x:hover { color: var(--bad); border-color: var(--line); }
-.plan-empty { margin: 0; color: var(--muted); font-size: 14px; }
-.sum { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sum { display: grid; gap: 7px; padding-top: 12px; border-top: 1px solid var(--line); }
 .sum-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
 .sum-row .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.sum-row.total { padding-top: 8px; border-top: 1px solid var(--line); }
+.sum-row.total { padding-top: 8px; border-top: 1px solid var(--line); align-items: baseline; }
 .sum-row.total .v { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--accent); }
 .runs { margin: 0; font-size: 14px; color: var(--muted); }
 .runs strong { color: var(--text); font-weight: 500; }
-.toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
-.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
 .src { margin: 0; font-size: 12px; color: var(--muted); }
+.copy-msg { font-size: 13px; color: var(--muted); }
+.copy-msg:empty { display: none; }
 
-.wip-body { display: grid; gap: 12px; }
-.wip-body ul { margin: 0; padding-left: 18px; color: var(--muted); display: grid; gap: 4px; }
-.loading { padding: 22px 18px; color: var(--muted); margin: 0; }
-
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
-  .plan { position: static; }
-}
-@media (max-width: 520px) {
-  .branches { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .branches::-webkit-scrollbar { display: none; }
-  .chipbtn { flex: none; }
-  .row-btn { --step: 14px; padding-left: calc(14px + var(--d, 0) * 14px); }
-  .row-btn.child::before { left: calc(14px + (var(--d) - 1) * 14px + 5px); width: 7px; }
-  .detail { padding-left: 18px; }
+  .side { position: static; }
 }
 </style>
 </head>
@@ -131,39 +140,19 @@
 
 <main class="page">
   <header class="page-head">
-    <div class="head-row">
-      <h1>Unlock tree</h1>
-      <span class="tag accent" id="wipTag" hidden>Under construction</span>
-    </div>
-    <p class="sub">Larry's Shipments tree. Pick what you want, tick off what you already have, and it adds up everything you still need to unlock and buy.</p>
+    <h1>Unlock tree</h1>
+    <p class="sub">Larry's Shipments. Click anything to see what it costs to unlock, what it costs to buy, and everything you need before it. Add it to your plan and tick off what you already have.</p>
   </header>
 
-  <div id="app">
-    <p class="loading">Loading the tree...</p>
-  </div>
+  <div id="app"><p class="empty">Loading the tree...</p></div>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
-    <span id="footSrc">Prices change with patches. Double-check in game (H) before you save up.</span>
+    <span>Numbers can change with patches. Double-check in game (H) before you save up.</span>
     <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
   </div>
 </footer>
-
-<template id="wipTpl">
-  <section class="panel wip">
-    <div class="wip-body">
-      <p class="wip-note">We're still putting the numbers in. Once they're in, this page will let you:</p>
-      <ul>
-        <li>Browse every branch: Documents, Vehicles, Construction, Weapons, Furnishings, Gear, Production and Gadgets</li>
-        <li>Click anything, like the Longhorn Wild, to see what has to come before it</li>
-        <li>Tick off what you've already unlocked so it isn't counted</li>
-        <li>See the total unlock cost, the Black Market price, and the settlement level and jail time you need</li>
-        <li>See how many runs that is at your average cut from the <a href="../split/">split calculator</a></li>
-      </ul>
-    </div>
-  </section>
-</template>
 
 <template id="appTpl">
   <div class="layout">
@@ -171,32 +160,44 @@
       <div class="toolbar">
         <div class="search">
           <label for="q" style="position:absolute;left:-9999px">Find a shipment</label>
-          <input type="search" id="q" placeholder="Find a shipment" autocomplete="off">
+          <input type="search" id="q" placeholder="Find a shipment, e.g. Longhorn" autocomplete="off" spellcheck="false">
         </div>
-        <label class="toggle"><input type="checkbox" id="hideOwned"> Hide what I have</label>
+        <div class="seg" role="group" aria-label="View">
+          <button type="button" data-view="tree" aria-pressed="true">Tree</button>
+          <button type="button" data-view="list" aria-pressed="false">List</button>
+        </div>
+        <label class="toggle"><input type="checkbox" id="hideOwned"> Hide owned</label>
       </div>
       <div class="branches" id="branches" role="group" aria-label="Branches"></div>
-      <ul class="tree" id="tree"></ul>
+      <div id="view"></div>
+      <div class="legend">
+        <span class="t-any">Any tier</span><span class="t-1">Tier I</span><span class="t-2">Tier II</span><span class="t-3">Tier III</span>
+        <span style="--tc:#ef9b6b">Jail time</span>
+      </div>
     </section>
 
-    <aside class="panel plan" aria-labelledby="planTitle">
-      <h2 class="panel-title" id="planTitle">Your plan</h2>
-      <ul class="plan-list" id="planList"></ul>
-      <p class="plan-empty" id="planEmpty">Click something in the tree and hit "Add to plan".</p>
-      <div class="sum" id="sum" hidden>
-        <div class="sum-row"><span class="label">Unlocks needed</span><span class="v" id="sCount">0</span></div>
-        <div class="sum-row"><span class="label">Unlock cost</span><span class="v" id="sUnlock">0</span></div>
-        <div class="sum-row"><span class="label">Black Market price</span><span class="v" id="sBuy">0</span></div>
-        <label class="toggle"><input type="checkbox" id="incBuy" checked> Include buying what I picked</label>
-        <div class="sum-row"><span class="label">Settlement level</span><span class="v" id="sSettle">–</span></div>
-        <div class="sum-row"><span class="label">Jail time</span><span class="v" id="sJail">–</span></div>
-        <div class="sum-row total"><span class="label">Total</span><span class="v" id="sTotal">0</span></div>
-        <p class="runs" id="runs"></p>
-      </div>
-      <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;border:0">
-        <button type="button" class="btn small" id="clearPlan">Clear plan</button>
-        <button type="button" class="btn small" id="clearOwned">Reset what I have</button>
-      </div>
+    <aside class="side">
+      <section class="panel card" id="detail" aria-live="polite"></section>
+      <section class="panel card" aria-labelledby="planTitle">
+        <h2 class="panel-title" id="planTitle">Your plan</h2>
+        <ul class="plan-list" id="planList"></ul>
+        <p class="runs" id="planEmpty">Click something in the tree and hit "Add to plan".</p>
+        <div class="sum" id="sum" hidden>
+          <div class="sum-row"><span class="label">Unlocks needed</span><span class="v" id="sCount">0</span></div>
+          <div class="sum-row"><span class="label">Unlock cost</span><span class="v" id="sUnlock">0</span></div>
+          <div class="sum-row"><span class="label">Buying it</span><span class="v" id="sBuy">0</span></div>
+          <div class="sum-row"><span class="label">Highest tier</span><span class="v" id="sTier">–</span></div>
+          <div class="sum-row"><span class="label">Jail time</span><span class="v" id="sJail">–</span></div>
+          <div class="sum-row total"><span class="label">Total</span><span class="v" id="sTotal">0</span></div>
+          <p class="runs" id="runs"></p>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn small" id="copyPlan">Copy for Discord</button>
+          <button type="button" class="btn small" id="clearPlan">Clear plan</button>
+          <button type="button" class="btn small" id="clearOwned">Reset owned</button>
+        </div>
+        <span class="copy-msg" id="copyMsg" role="status"></span>
+      </section>
       <p class="src" id="srcNote"></p>
     </aside>
   </div>
@@ -205,22 +206,32 @@
 <script>
 (function () {
   "use strict";
-  var KEY = "robrun-unlocks-v1", SPLIT_KEY = "robrun-split-v1";
+  var KEY = "robrun-unlocks-v2", SPLIT_KEY = "robrun-split-v1";
   var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+  var NODE_W = 196, NODE_H = 60, COL = 246, ROW = 72;
   var app = document.getElementById("app");
-
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function money(n) { return n > 0 ? "$" + fmt.format(n) : "Free"; }
+  function short(n) {
+    if (!(n > 0)) return "Free";
+    if (n >= 1e6) return "$" + (n / 1e6).toFixed(2).replace(/\.?0+$/, "") + "M";
+    if (n >= 1e3) return "$" + (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+    return "$" + n;
+  }
+  function tierClass(n) { return "t-" + (n.settlement ? n.settlement : "any"); }
+  function hashOf(id) { return id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 
   function loadState() {
     try {
       var o = JSON.parse(localStorage.getItem(KEY) || "null");
-      if (o && typeof o === "object") return { plan: Array.isArray(o.plan) ? o.plan : [], owned: Array.isArray(o.owned) ? o.owned : [], branch: o.branch || null, incBuy: o.incBuy !== false, hideOwned: !!o.hideOwned };
+      if (o && typeof o === "object") return {
+        plan: Array.isArray(o.plan) ? o.plan : [], owned: Array.isArray(o.owned) ? o.owned : [],
+        branch: o.branch || null, view: o.view || null, hideOwned: !!o.hideOwned, sel: o.sel || null
+      };
     } catch (e) { /* ignore */ }
-    return { plan: [], owned: [], branch: null, incBuy: true, hideOwned: false };
+    return { plan: [], owned: [], branch: null, view: null, hideOwned: false, sel: null };
   }
   function saveState() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ } }
-
   function avgCut() {
     try {
       var s = JSON.parse(localStorage.getItem(SPLIT_KEY) || "null");
@@ -231,186 +242,293 @@
     } catch (e) { return 0; }
   }
 
-  var state = loadState(), data = null, byId = {}, kids = {}, openId = null;
-
-  function showWip(note) {
-    document.getElementById("wipTag").hidden = false;
-    app.innerHTML = "";
-    app.appendChild(document.getElementById("wipTpl").content.cloneNode(true));
-    if (note) { var p = document.createElement("p"); p.className = "src"; p.style.marginTop = "12px"; p.textContent = note; app.appendChild(p); }
-  }
+  var state = loadState(), data, byId = {}, kids = {}, level = {}, el = {};
 
   fetch("../data/shipments.json", { cache: "no-cache" })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(function (d) {
-      if (!d || !Array.isArray(d.items) || !d.items.length) { showWip(); return; }
+      if (!d || !Array.isArray(d.items) || !d.items.length) throw new Error("empty");
       data = d;
       d.items.forEach(function (it) { byId[it.id] = it; kids[it.id] = []; });
       d.items.forEach(function (it) { if (it.after && byId[it.after]) kids[it.after].push(it); });
+      // Same-name items (like the three Sports Bags) get a level number so you can tell them apart.
+      var groups = {};
+      d.items.forEach(function (it) { var k = it.branch + "|" + it.name; (groups[k] = groups[k] || []).push(it); });
+      Object.keys(groups).forEach(function (k) {
+        var g = groups[k];
+        if (g.length < 2) return;
+        g.sort(function (a, b) { return depth(a) - depth(b) || a.unlock - b.unlock; });
+        g.forEach(function (it, i) { level[it.id] = i + 1; });
+      });
       state.plan = state.plan.filter(function (id) { return byId[id]; });
       state.owned = state.owned.filter(function (id) { return byId[id]; });
-      if (!state.branch || d.branches.indexOf(state.branch) < 0) state.branch = d.branches[0];
+      if (!state.branch || d.branches.indexOf(state.branch) < 0) state.branch = "Vehicles";
+      if (!state.view) state.view = window.matchMedia("(max-width: 700px)").matches ? "list" : "tree";
+      var h = (location.hash || "").slice(1);
+      if (h) { var hit = d.items.filter(function (it) { return hashOf(it.id) === h; })[0]; if (hit) { state.sel = hit.id; state.branch = hit.branch; } }
+      if (state.sel && !byId[state.sel]) state.sel = null;
+      if (!state.sel) state.sel = byId.longhorn_wild ? "longhorn_wild" : d.items[0].id;
       mount();
     })
-    .catch(function () { showWip("Couldn't load the tree data. Refresh to try again."); });
+    .catch(function () { app.innerHTML = '<p class="empty">Couldn\'t load the tree. Refresh to try again.</p>'; });
 
-  // Everything you'd still have to unlock to get id, root first.
+  function depth(n) { var d = 0, cur = n, seen = {}; while (cur && cur.after && byId[cur.after] && !seen[cur.id]) { seen[cur.id] = 1; cur = byId[cur.after]; d++; } return d; }
+  function label(n) { return n.name + (level[n.id] ? " " + ["", "I", "II", "III", "IV", "V"][level[n.id]] : ""); }
+
   function pathTo(id) {
     var out = [], seen = {}, cur = byId[id];
     while (cur && !seen[cur.id]) { seen[cur.id] = 1; out.unshift(cur); cur = cur.after ? byId[cur.after] : null; }
     return out;
   }
+  function ownedSet() { var o = {}; state.owned.forEach(function (id) { o[id] = 1; }); return o; }
   function planCalc() {
-    var owned = {}, need = {}, list = [];
-    state.owned.forEach(function (id) { owned[id] = 1; });
+    var owned = ownedSet(), need = {}, list = [];
     state.plan.forEach(function (id) {
       pathTo(id).forEach(function (n) { if (!owned[n.id] && !need[n.id]) { need[n.id] = 1; list.push(n); } });
     });
-    var unlock = 0, settle = 0, jail = 0;
-    list.forEach(function (n) { unlock += n.unlock || 0; settle = Math.max(settle, n.settlement || 0); jail = Math.max(jail, n.jail || 0); });
-    var buy = 0;
+    var unlock = 0, tier = 0, jail = 0, buy = 0;
+    list.forEach(function (n) { unlock += n.unlock || 0; tier = Math.max(tier, n.settlement || 0); jail = Math.max(jail, n.jail || 0); });
     state.plan.forEach(function (id) { buy += byId[id].buy || 0; });
-    return { list: list, need: need, unlock: unlock, buy: buy, settle: settle, jail: jail };
+    return { list: list, need: need, unlock: unlock, buy: buy, tier: tier, jail: jail };
   }
 
-  var el = {};
   function mount() {
     app.innerHTML = "";
     app.appendChild(document.getElementById("appTpl").content.cloneNode(true));
-    ["q", "hideOwned", "branches", "tree", "planList", "planEmpty", "sum", "sCount", "sUnlock", "sBuy", "incBuy", "sSettle", "sJail", "sTotal", "runs", "clearPlan", "clearOwned", "srcNote"]
+    ["q", "hideOwned", "branches", "view", "detail", "planList", "planEmpty", "sum", "sCount", "sUnlock", "sBuy", "sTier", "sJail", "sTotal", "runs", "copyPlan", "clearPlan", "clearOwned", "copyMsg", "srcNote"]
       .forEach(function (id) { el[id] = document.getElementById(id); });
     el.hideOwned.checked = state.hideOwned;
-    el.incBuy.checked = state.incBuy;
-    var note = [];
-    if (data.updated) note.push("Numbers last checked " + data.updated + ".");
-    if (data.source) note.push("Source: " + data.source + ".");
-    el.srcNote.textContent = note.join(" ");
-
-    el.q.addEventListener("input", renderTree);
-    el.hideOwned.addEventListener("change", function () { state.hideOwned = el.hideOwned.checked; saveState(); renderTree(); });
-    el.incBuy.addEventListener("change", function () { state.incBuy = el.incBuy.checked; saveState(); renderPlan(); });
-    el.clearPlan.addEventListener("click", function () { state.plan = []; saveState(); renderAll(); });
-    el.clearOwned.addEventListener("click", function () { state.owned = []; saveState(); renderAll(); });
+    el.srcNote.innerHTML = 'Data: <a href="' + esc(data.sourceUrl) + '">robrungame.com Shipment Planner</a>, from the game files, checked ' + esc(data.updated) + ". All 172 unlocks add up to $36,182,000 of research.";
+    document.querySelectorAll(".seg button").forEach(function (b) {
+      b.addEventListener("click", function () { state.view = b.getAttribute("data-view"); saveState(); renderView(); centerOn(state.sel); });
+    });
+    el.q.addEventListener("input", renderView);
+    el.hideOwned.addEventListener("change", function () { state.hideOwned = el.hideOwned.checked; saveState(); renderView(); });
     el.branches.addEventListener("click", function (e) {
       var b = e.target.closest("button[data-branch]"); if (!b) return;
-      state.branch = b.getAttribute("data-branch"); el.q.value = ""; openId = null; saveState(); renderAll();
+      state.branch = b.getAttribute("data-branch"); el.q.value = ""; saveState(); renderView();
     });
-    el.tree.addEventListener("click", onTreeClick);
+    el.view.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-id]"); if (!b) return;
+      select(b.getAttribute("data-id"), !!el.q.value.trim());
+    });
+    el.detail.addEventListener("click", onDetailClick);
     el.planList.addEventListener("click", function (e) {
-      var b = e.target.closest("button[data-rm]"); if (!b) return;
-      var id = b.getAttribute("data-rm");
-      state.plan = state.plan.filter(function (x) { return x !== id; }); saveState(); renderAll();
+      var rm = e.target.closest("button[data-rm]");
+      if (rm) { var id = rm.getAttribute("data-rm"); state.plan = state.plan.filter(function (x) { return x !== id; }); saveState(); renderAll(); return; }
+      var go = e.target.closest("button[data-go]");
+      if (go) select(go.getAttribute("data-go"), true);
     });
+    el.clearPlan.addEventListener("click", function () { state.plan = []; saveState(); renderAll(); });
+    el.clearOwned.addEventListener("click", function () { state.owned = []; saveState(); renderAll(); });
+    el.copyPlan.addEventListener("click", copyPlan);
     renderAll();
+    centerOn(state.sel);
   }
 
-  function renderAll() { renderBranches(); renderTree(); renderPlan(); }
+  function select(id, jump) {
+    if (!byId[id]) return;
+    state.sel = id;
+    if (jump) { state.branch = byId[id].branch; el.q.value = ""; }
+    saveState();
+    try { history.replaceState(null, "", "#" + hashOf(id)); } catch (e) { /* ignore */ }
+    var cw = document.getElementById("cw"), sl = cw ? cw.scrollLeft : 0, st = cw ? cw.scrollTop : 0;
+    renderAll();
+    if (jump) centerOn(id);
+    else { cw = document.getElementById("cw"); if (cw) { cw.scrollLeft = sl; cw.scrollTop = st; } }
+  }
 
-  function renderBranches() {
+  function renderAll() { renderView(); renderDetail(); renderPlan(); }
+
+  function renderBranches(searching) {
     el.branches.innerHTML = data.branches.map(function (b) {
       var n = data.items.filter(function (it) { return it.branch === b; }).length;
-      return '<button type="button" class="chipbtn" data-branch="' + esc(b) + '" aria-pressed="' + (b === state.branch && !el.q.value.trim()) + '">' + esc(b) + '<span class="n">' + n + "</span></button>";
+      return '<button type="button" class="chipbtn" data-branch="' + esc(b) + '" aria-pressed="' + (b === state.branch && !searching) + '">' + esc(b) + '<span class="n">' + n + "</span></button>";
     }).join("");
   }
 
-  function renderTree() {
+  function nodeClass(n, pc, owned, targets) {
+    var c = [tierClass(n)];
+    if (owned[n.id]) c.push("owned"); else if (pc.need[n.id]) c.push("need");
+    if (targets[n.id]) c.push("target");
+    if (state.sel === n.id) c.push("sel");
+    return c.join(" ");
+  }
+
+  function renderView() {
     var q = el.q.value.trim().toLowerCase();
-    var pc = planCalc(), owned = {}, target = {};
-    state.owned.forEach(function (id) { owned[id] = 1; });
-    state.plan.forEach(function (id) { target[id] = 1; });
-    var rows = [];
-    function walk(node, depth) {
-      if (state.hideOwned && owned[node.id] && !q) { kids[node.id].forEach(function (k) { walk(k, depth); }); return; }
-      rows.push({ node: node, depth: depth });
-      kids[node.id].forEach(function (k) { walk(k, depth + 1); });
-    }
+    renderBranches(!!q);
+    document.querySelectorAll(".seg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-view") === state.view)); });
+    var pc = planCalc(), owned = ownedSet(), targets = {};
+    state.plan.forEach(function (id) { targets[id] = 1; });
+
     if (q) {
-      data.items.filter(function (it) { return it.name.toLowerCase().indexOf(q) >= 0; })
-        .forEach(function (it) { rows.push({ node: it, depth: 0, showBranch: true }); });
-    } else {
-      data.items.filter(function (it) { return it.branch === state.branch && (!it.after || !byId[it.after]); })
-        .forEach(function (root) { walk(root, 0); });
-    }
-    renderBranches();
-    if (!rows.length) { el.tree.innerHTML = '<li class="loading">' + (q ? "Nothing matches that." : "Nothing here yet.") + "</li>"; return; }
-    el.tree.innerHTML = rows.map(function (r) {
-      var n = r.node, cls = ["row"];
-      if (owned[n.id]) cls.push("owned"); else if (pc.need[n.id]) cls.push("in-plan");
-      if (target[n.id]) cls.push("target");
-      var open = openId === n.id;
-      return '<li class="' + cls.join(" ") + '" style="--d:' + r.depth + '">' +
-        '<button type="button" class="row-btn' + (r.depth ? " child" : "") + '" data-id="' + esc(n.id) + '" aria-expanded="' + open + '">' +
-        '<span class="tier">' + esc(n.tier || "–") + "</span>" +
-        '<span class="name">' + esc(n.name) + (n.isNew ? '<span class="new">NEW</span>' : "") + (r.showBranch ? ' <span class="cost">· ' + esc(n.branch) + "</span>" : "") + "</span>" +
-        '<span class="cost">' + money(n.unlock) + "</span></button>" +
-        (open ? detailHtml(n, owned, target) : "") + "</li>";
-    }).join("");
-  }
-
-  function detailHtml(n, owned, target) {
-    var path = pathTo(n.id), reach = 0;
-    path.forEach(function (p) { if (!owned[p.id]) reach += p.unlock || 0; });
-    var parent = n.after ? byId[n.after] : null;
-    var opens = kids[n.id].map(function (k) { return esc(k.name); }).join(", ");
-    return '<div class="detail">' +
-      '<div class="facts">' +
-      '<div class="fact"><span class="label">Unlock</span><span class="v">' + money(n.unlock) + "</span></div>" +
-      '<div class="fact"><span class="label">Black Market</span><span class="v">' + (n.buy ? money(n.buy) : "–") + "</span></div>" +
-      '<div class="fact"><span class="label">To reach (unlocks)</span><span class="v warn">' + money(reach) + "</span></div>" +
-      '<div class="fact"><span class="label">Settlement</span><span class="v">' + (n.settlement ? "Level " + n.settlement + "+" : "Any") + "</span></div>" +
-      '<div class="fact"><span class="label">Jail time</span><span class="v">' + (n.jail ? n.jail + " years" : "None") + "</span></div>" +
-      "</div>" +
-      (parent ? '<div class="opens">Comes after ' + esc(parent.name) + (opens ? ". Opens " + opens + "." : ".") + "</div>" : (opens ? '<div class="opens">Opens ' + opens + ".</div>" : "")) +
-      '<div class="actions">' +
-      '<button type="button" class="btn small' + (target[n.id] ? "" : " primary") + '" data-act="plan" data-id="' + esc(n.id) + '">' + (target[n.id] ? "Remove from plan" : "Add to plan") + "</button>" +
-      '<button type="button" class="btn small" data-act="own" data-id="' + esc(n.id) + '">' + (owned[n.id] ? "I don't have this" : "I have this") + "</button>" +
-      "</div></div>";
-  }
-
-  function onTreeClick(e) {
-    var act = e.target.closest("button[data-act]");
-    if (act) {
-      var id = act.getAttribute("data-id");
-      if (act.getAttribute("data-act") === "plan") {
-        if (state.plan.indexOf(id) >= 0) state.plan = state.plan.filter(function (x) { return x !== id; });
-        else state.plan.push(id);
-      } else {
-        if (state.owned.indexOf(id) >= 0) state.owned = state.owned.filter(function (x) { return x !== id; });
-        else {
-          // Having something means you have everything before it.
-          pathTo(id).forEach(function (p) { if (state.owned.indexOf(p.id) < 0) state.owned.push(p.id); });
-        }
-      }
-      saveState(); renderTree(); renderPlan();
+      var hits = data.items.filter(function (it) { return label(it).toLowerCase().indexOf(q) >= 0 || it.branch.toLowerCase().indexOf(q) >= 0; });
+      el.view.innerHTML = hits.length ? '<ul class="list">' + hits.map(function (n) { return listRow(n, 0, pc, owned, targets, true); }).join("") + "</ul>" : '<p class="empty">Nothing matches that.</p>';
       return;
     }
-    var row = e.target.closest("button.row-btn");
-    if (!row) return;
-    var rid = row.getAttribute("data-id");
-    openId = openId === rid ? null : rid;
-    renderTree();
+    var items = data.items.filter(function (it) { return it.branch === state.branch; });
+    var inBranch = {}; items.forEach(function (it) { inBranch[it.id] = 1; });
+    var roots = items.filter(function (it) { return !it.after || !inBranch[it.after]; });
+    function childrenOf(n) { return kids[n.id].filter(function (k) { return inBranch[k.id]; }); }
+
+    if (state.view === "list") {
+      var rows = [];
+      (function walkAll(list, d) {
+        list.forEach(function (n) {
+          var hide = state.hideOwned && owned[n.id];
+          if (!hide) rows.push(listRow(n, d, pc, owned, targets, false));
+          walkAll(childrenOf(n), hide ? d : d + 1);
+        });
+      })(roots, 0);
+      el.view.innerHTML = rows.length ? '<ul class="list">' + rows.join("") + "</ul>" : '<p class="empty">You have everything in this branch.</p>';
+      return;
+    }
+
+    // Tree view: roots on the left, children branch out to the right.
+    var pos = {}, row = 0, maxDepth = 0;
+    function place(n, d) {
+      maxDepth = Math.max(maxDepth, d);
+      var ch = childrenOf(n);
+      if (!ch.length) { pos[n.id] = { x: d, y: row++ }; return; }
+      ch.forEach(function (c) { place(c, d + 1); });
+      pos[n.id] = { x: d, y: (pos[ch[0].id].y + pos[ch[ch.length - 1].id].y) / 2 };
+    }
+    roots.forEach(function (r) { place(r, 0); row += 0.35; });
+    var W = (maxDepth + 1) * COL - (COL - NODE_W), H = Math.ceil(row) * ROW;
+    var paths = [];
+    items.forEach(function (n) {
+      childrenOf(n).forEach(function (c) {
+        var a = pos[n.id], b = pos[c.id];
+        var x1 = a.x * COL + NODE_W, y1 = a.y * ROW + NODE_H / 2, x2 = b.x * COL, y2 = b.y * ROW + NODE_H / 2, mx = x1 + (x2 - x1) / 2;
+        var cls = pc.need[c.id] ? "hot" : (owned[c.id] ? "done" : "");
+        paths.push('<path class="' + cls + '" d="M' + x1 + "," + y1 + " H" + mx + " V" + y2 + " H" + x2 + '"/>');
+      });
+    });
+    var nodes = items.map(function (n) {
+      var p = pos[n.id];
+      var dim = state.hideOwned && owned[n.id] ? " dim" : "";
+      return '<button type="button" class="node ' + nodeClass(n, pc, owned, targets) + dim + '" data-id="' + esc(n.id) + '" style="left:' + (p.x * COL) + "px;top:" + (p.y * ROW) + 'px" title="' + esc(label(n)) + '">' +
+        '<span class="tb">' + esc(n.tier) + '</span><span class="nm">' + esc(label(n)) + "</span>" +
+        '<span class="cs">' + short(n.unlock) + (n.buy ? " · buy " + short(n.buy) : "") + "</span>" + (n.jail ? '<span class="jb" title="Needs ' + n.jail + ' years of jail time">' + n.jail + "y jail</span>" : "") + "</button>";
+    }).join("");
+    el.view.innerHTML = '<div class="canvas-wrap" id="cw"><div class="canvas" style="width:' + W + "px;height:" + H + 'px"><svg width="' + W + '" height="' + H + '" aria-hidden="true">' + paths.join("") + "</svg>" + nodes + "</div></div>";
+  }
+
+  function listRow(n, d, pc, owned, targets, showBranch) {
+    var cls = [tierClass(n)];
+    if (owned[n.id]) cls.push("owned"); else if (pc.need[n.id]) cls.push("need");
+    if (state.sel === n.id) cls.push("sel");
+    return '<li class="' + cls.join(" ") + '" style="--d:' + d + '"><button type="button" data-id="' + esc(n.id) + '">' +
+      '<span class="tb">' + esc(n.tier) + '</span><span class="nm">' + esc(label(n)) + (targets[n.id] ? ' <span class="tag accent" style="padding:0 6px">Plan</span>' : "") + (showBranch ? ' <span class="cs">· ' + esc(n.branch) + "</span>" : "") + "</span>" +
+      '<span class="cs">' + money(n.unlock) + "</span></button></li>";
+  }
+
+  function centerOn(id) {
+    var cw = document.getElementById("cw");
+    if (!cw) return;
+    var nodeEl = cw.querySelector('[data-id="' + id + '"]');
+    if (!nodeEl) return;
+    // Scroll only as far as needed to show the node, so the start of the branch stays in view when it can.
+    var right = nodeEl.offsetLeft + NODE_W + 60, bottom = nodeEl.offsetTop + NODE_H + 60;
+    cw.scrollLeft = right > cw.clientWidth ? right - cw.clientWidth : 0;
+    cw.scrollTop = bottom > cw.clientHeight ? bottom - cw.clientHeight / 2 : 0;
+  }
+
+  function renderDetail() {
+    var n = byId[state.sel];
+    if (!n) { el.detail.innerHTML = '<p class="runs">Click anything in the tree.</p>'; return; }
+    var owned = ownedSet(), inPlan = state.plan.indexOf(n.id) >= 0;
+    var path = pathTo(n.id), reach = 0, steps = 0, tier = 0, jail = 0;
+    path.forEach(function (p) { if (!owned[p.id]) { reach += p.unlock || 0; steps++; tier = Math.max(tier, p.settlement || 0); jail = Math.max(jail, p.jail || 0); } });
+    var total = reach + (n.buy || 0);
+    var chain = path.map(function (p) {
+      return p.id === n.id ? "<b>" + esc(label(p)) + "</b>" : '<a data-go="' + esc(p.id) + '"' + (owned[p.id] ? ' style="color:var(--good)"' : "") + ">" + esc(label(p)) + "</a>";
+    }).join(" → ");
+    var opens = kids[n.id].map(function (k) { return '<a data-go="' + esc(k.id) + '">' + esc(label(k)) + "</a>"; }).join(", ");
+    var reqs = [];
+    if (tier) reqs.push("a Tier " + ["", "I", "II", "III"][tier] + " settlement");
+    if (jail) reqs.push(jail + " years of jail time");
+    el.detail.innerHTML =
+      '<div><span class="tag ' + tierTag(n) + '">' + esc(n.branch) + " · Tier " + esc(n.tier) + "</span></div>" +
+      '<h2 class="title">' + esc(label(n)) + "</h2>" +
+      '<div class="facts">' +
+      '<div class="fact"><span class="label">Unlock</span><span class="v">' + money(n.unlock) + "</span></div>" +
+      '<div class="fact"><span class="label">Buy</span><span class="v">' + (n.buy ? money(n.buy) : "–") + "</span></div>" +
+      '<div class="fact"><span class="label">To get here</span><span class="v">' + (steps ? money(reach) + ' <span style="color:var(--muted);font-size:12px">(' + steps + ")</span>" : "Done") + "</span></div>" +
+      '<div class="fact"><span class="label">Jail time</span><span class="v">' + (n.jail ? n.jail + " years" : "None") + "</span></div>" +
+      '<div class="fact wide"><span class="label">Total to own one</span><span class="v big">' + money(total) + "</span></div>" +
+      (n.city ? '<div class="fact wide"><span class="label">City store</span><span class="v">' + money(n.city) + ' <span style="color:var(--muted);font-size:12px">· buy it on the Black Market instead</span></span></div>' : "") +
+      "</div>" +
+      '<div class="chain">' + (path.length > 1 ? "Path: " + chain : "Nothing needed before this.") + (opens ? "<br>Opens: " + opens : "") +
+      (reqs.length ? "<br>Needs " + reqs.join(" and ") + "." : "") + "</div>" +
+      '<div class="actions">' +
+      '<button type="button" class="btn small' + (inPlan ? "" : " primary") + '" data-act="plan">' + (inPlan ? "Remove from plan" : "Add to plan") + "</button>" +
+      '<button type="button" class="btn small" data-act="own">' + (owned[n.id] ? "I don't have this" : "I have this") + "</button>" +
+      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="' + esc(n.url) + '" target="_blank" rel="noopener">Source ↗</a>' +
+      "</div>";
+  }
+  function tierTag(n) { return n.settlement === 3 ? "accent" : (n.settlement ? "" : ""); }
+
+  function onDetailClick(e) {
+    var go = e.target.closest("[data-go]");
+    if (go) { select(go.getAttribute("data-go"), true); return; }
+    var act = e.target.closest("button[data-act]");
+    if (!act) return;
+    var id = state.sel;
+    if (act.getAttribute("data-act") === "plan") {
+      if (state.plan.indexOf(id) >= 0) state.plan = state.plan.filter(function (x) { return x !== id; });
+      else state.plan.push(id);
+    } else {
+      if (state.owned.indexOf(id) >= 0) {
+        // Not having it means you don't have anything after it either.
+        var drop = {}; (function mark(n) { drop[n.id] = 1; kids[n.id].forEach(mark); })(byId[id]);
+        state.owned = state.owned.filter(function (x) { return !drop[x]; });
+      } else {
+        pathTo(id).forEach(function (p) { if (state.owned.indexOf(p.id) < 0) state.owned.push(p.id); });
+      }
+    }
+    saveState();
+    var cw = document.getElementById("cw"), sl = cw ? cw.scrollLeft : 0, st = cw ? cw.scrollTop : 0;
+    renderAll();
+    cw = document.getElementById("cw"); if (cw) { cw.scrollLeft = sl; cw.scrollTop = st; }
   }
 
   function renderPlan() {
     var pc = planCalc();
     el.planList.innerHTML = state.plan.map(function (id) {
       var n = byId[id];
-      return "<li><span>" + esc(n.name) + ' <span class="cost">' + esc(n.branch) + '</span></span><button type="button" class="x" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(n.name) + ' from plan">×</button></li>';
+      return '<li><button type="button" class="go" data-go="' + esc(id) + '">' + esc(label(n)) + ' <span style="color:var(--muted);font-size:12px">' + esc(n.branch) + '</span></button><button type="button" class="x" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(label(n)) + '">×</button></li>';
     }).join("");
     el.planEmpty.hidden = !!state.plan.length;
     el.sum.hidden = !state.plan.length;
     if (!state.plan.length) return;
-    var total = pc.unlock + (state.incBuy ? pc.buy : 0);
+    var total = pc.unlock + pc.buy;
     el.sCount.textContent = String(pc.list.length);
     el.sUnlock.textContent = money(pc.unlock);
     el.sBuy.textContent = pc.buy ? money(pc.buy) : "–";
-    el.sSettle.textContent = pc.settle ? "Level " + pc.settle + "+" : "Any";
+    el.sTier.textContent = pc.tier ? "Tier " + ["", "I", "II", "III"][pc.tier] : "Any";
     el.sJail.textContent = pc.jail ? pc.jail + " years" : "None";
     el.sTotal.textContent = money(total);
     var avg = avgCut();
-    if (total <= 0) el.runs.textContent = "";
-    else if (avg > 0) el.runs.innerHTML = "At your average cut of " + fmt.format(avg) + ", that's about <strong>" + Math.ceil(total / avg) + " runs</strong>.";
-    else el.runs.innerHTML = 'Log a few runs in the <a href="../split/">split calculator</a> and this will tell you how many runs it takes.';
+    el.runs.innerHTML = avg > 0
+      ? "At your average cut of $" + fmt.format(avg) + ", that's about <strong>" + Math.ceil(total / avg) + " runs</strong>."
+      : 'Log a few runs in the <a href="../split/">split calculator</a> and this tells you how many runs it takes.';
+  }
+
+  function copyPlan() {
+    var pc = planCalc();
+    if (!state.plan.length) { el.copyMsg.textContent = "Add something to your plan first."; return; }
+    var lines = ["**ROB RUN unlock plan**"];
+    state.plan.forEach(function (id) { var n = byId[id]; lines.push("• " + label(n) + " (" + n.branch + ")"); });
+    lines.push("Unlocks needed: " + pc.list.length + " · " + money(pc.unlock));
+    lines.push("Buying it: " + money(pc.buy));
+    lines.push("Total: " + money(pc.unlock + pc.buy) + (pc.tier ? " · needs Tier " + ["", "I", "II", "III"][pc.tier] : "") + (pc.jail ? " · " + pc.jail + " yrs jail" : ""));
+    var text = lines.join("\n");
+    function done(msg) { el.copyMsg.textContent = msg; setTimeout(function () { el.copyMsg.textContent = ""; }, 3000); }
+    try {
+      navigator.clipboard.writeText(text).then(function () { done("Copied. Paste it in Discord."); }, function () { done("Couldn't copy here."); });
+    } catch (e) { done("Couldn't copy here."); }
   }
 })();
 </script>
