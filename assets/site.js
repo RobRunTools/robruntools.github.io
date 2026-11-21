@@ -62,6 +62,97 @@
     el._rrRaf = requestAnimationFrame(step);
   };
 
+  /* ---- Laundering desk: a pile of cash bundles that grows with a total ----
+     RR.pile(el) returns { update(total, goal, opts) }. Each bundle is a round amount picked so
+     the goal fills about 48 bundles; up to 64 are drawn. New bundles drop onto the desk. */
+  RR.pile = function (root) {
+    var COLS = 8, ROWS = 8, MAX = COLS * ROWS;
+    var fmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+    root.classList.add("pile");
+    root.innerHTML = '<div class="pile-stage"><div class="pile-bills"></div><div class="pile-desk"></div><span class="pile-more" hidden></span><span class="pile-empty">Your cash lands here as you log runs</span></div><div class="pile-cap"><span class="pile-unit"></span><span class="pile-count"></span></div>';
+    var billsEl = root.querySelector(".pile-bills"), desk = root.querySelector(".pile-desk");
+    var moreEl = root.querySelector(".pile-more"), emptyEl = root.querySelector(".pile-empty");
+    var unitEl = root.querySelector(".pile-unit"), countEl = root.querySelector(".pile-count");
+    // Fill order: low layers first, centre stacks before the edges, so it grows into a mound
+    var order = [];
+    for (var c = 0; c < COLS; c++) for (var r = 0; r < ROWS; r++) order.push({ c: c, r: r, k: r + Math.abs(c - (COLS - 1) / 2) * 0.8 + ((c * 7) % 3) * 0.03 });
+    order.sort(function (a, b) { return a.k - b.k; });
+    function rnd(i) { var x = Math.sin(i * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); }
+    var bills = [], unit = 0;
+    function niceUnit(goal) {
+      var raw = Math.max(1000, goal / 48), steps = [1, 2, 2.5, 5], p = Math.pow(10, Math.floor(Math.log10(raw)));
+      for (var i = 0; i < 8; i++) { for (var j = 0; j < steps.length; j++) { var v = steps[j] * p; if (v >= raw * 0.8) return v; } p *= 10; }
+      return raw;
+    }
+    function place(b, i) {
+      var o = order[i], w = 100 / COLS;
+      b.style.left = "calc(" + (o.c * w) + "% + 2px)";
+      b.style.width = "calc(" + w + "% - 4px)";
+      b.style.bottom = (o.r * 18) + "px";
+      b._jx = Math.round((rnd(i) - 0.5) * 6);
+      b._rot = ((rnd(i + 99) - 0.5) * 3).toFixed(2);
+      b.style.transform = "translateX(" + b._jx + "px) rotate(" + b._rot + "deg)";
+      b.style.zIndex = String(o.r * 10 + 5);
+    }
+    function addBill(i, delay, animate) {
+      var b = document.createElement("span");
+      b.className = "bill";
+      place(b, i);
+      billsEl.appendChild(b);
+      bills.push(b);
+      if (animate && !reduce && b.animate) {
+        var end = "translateX(" + b._jx + "px) rotate(" + b._rot + "deg)";
+        b.animate([
+          { transform: "translate(" + b._jx + "px, -150px) rotate(" + (b._rot * 6) + "deg)", opacity: 0 },
+          { transform: "translate(" + b._jx + "px, 3px) rotate(" + b._rot + "deg)", opacity: 1, offset: 0.78 },
+          { transform: end, opacity: 1 }
+        ], { duration: 520, delay: delay, easing: "cubic-bezier(0.3, 0.7, 0.4, 1)", fill: "backwards" });
+      }
+    }
+    function dropBill(delay, animate) {
+      var b = bills.pop();
+      if (!b) return;
+      if (animate && !reduce && b.animate) {
+        var a = b.animate([{ opacity: 1 }, { transform: "translate(" + b._jx + "px, -40px) rotate(" + (b._rot * 4) + "deg)", opacity: 0 }], { duration: 320, delay: delay, easing: "ease-in", fill: "forwards" });
+        a.onfinish = function () { b.remove(); };
+      } else b.remove();
+    }
+    var thudTimer;
+    return {
+      update: function (total, goal, opts) {
+        opts = opts || {};
+        var animate = opts.animate !== false;
+        var u = niceUnit(goal > 0 ? goal : 1000000);
+        if (u !== unit) {
+          // Goal changed enough to change the bundle size: redraw quietly instead of re-dropping everything
+          if (unit) animate = false;
+          while (bills.length) dropBill(0, false);
+          unit = u;
+        }
+        var exact = total / unit;
+        var want = total > 0 ? Math.max(1, Math.min(MAX, Math.floor(exact))) : 0;
+        var have = bills.length, step = opts.fast ? 16 : 45;
+        if (want > have) {
+          var n = want - have;
+          for (var i = 0; i < n; i++) addBill(have + i, Math.min(i * step, 1100), animate);
+          if (animate && !reduce) {
+            clearTimeout(thudTimer);
+            thudTimer = setTimeout(function () { desk.classList.remove("thud"); void desk.offsetWidth; desk.classList.add("thud"); }, Math.min((n - 1) * step, 1100) + 400);
+          }
+        } else if (want < have) {
+          for (var k = 0; k < have - want; k++) dropBill(k * 25, animate);
+        }
+        var extra = Math.floor(exact) - MAX;
+        moreEl.hidden = extra <= 0;
+        if (extra > 0) moreEl.textContent = "+" + fmt.format(extra) + " more";
+        emptyEl.hidden = total > 0;
+        unitEl.innerHTML = "Each bundle is <b>$" + fmt.format(unit) + "</b>";
+        countEl.innerHTML = total > 0 ? "<b>" + fmt.format(Math.floor(exact)) + "</b> " + (Math.floor(exact) === 1 ? "bundle" : "bundles") + (goal > 0 ? ", goal is " + fmt.format(Math.round(goal / unit)) : "") : "";
+        root.classList.toggle("done", goal > 0 && total >= goal);
+      }
+    };
+  };
+
   /* ---- Smooth scroll to an element, clearing the sticky bars ---- */
   RR.scrollTo = function (target) {
     if (!target) return;

@@ -7,20 +7,27 @@
 <meta name="description" content="Split calculator, unlock tree, price check and FAQ for ROB RUN.">
 <meta property="og:title" content="ROB RUN Tools">
 <meta property="og:description" content="Split the take with your crew, plan your unlocks and check what the fence pays.">
-<meta name="theme-color" content="#162027">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#12212c">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/logo-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:image" content="https://robruntools.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
-<script src="assets/site.js" defer></script>
+<script src="assets/site.js"></script>
 <style>
-.hero { display: grid; gap: 18px; padding: 8px 0 4px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px 40px; padding: 8px 0 4px; }
+.hero-text { display: grid; gap: 18px; }
+.hero-logo { width: clamp(160px, 19vw, 250px); height: auto; filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.45)); }
 .hero h1 { font-size: clamp(64px, 12vw, 148px); line-height: 0.84; letter-spacing: -0.01em; }
 .hero h1 span { display: block; color: var(--sodium); }
 .hero .sub { font-size: 19px; max-width: 46ch; }
 
 /* Your cut, pulled from the split calculator on this device */
-.wallet { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 28px; align-items: end; padding: 26px 26px 24px; }
+.wallet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 500px); gap: 18px 32px; align-items: end; padding: 26px 26px 24px; }
+.wallet-main { display: grid; gap: 0; align-content: end; }
 .wallet .label { font-size: 15px; }
 .cash {
   font-family: var(--font-display); font-weight: 800; line-height: 0.86; letter-spacing: -0.01em;
@@ -32,7 +39,7 @@
 .wallet .meter { grid-column: 1 / -1; height: 8px; border-radius: 99px; background: var(--pier-3); overflow: hidden; }
 .wallet .meter i { display: block; height: 100%; width: 0; border-radius: 99px; background: var(--sodium); transition: width 1s var(--ease); }
 .wallet .meter i.done { background: var(--cash); }
-.wallet .acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.wallet .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .wallet.empty .cash { font-size: clamp(44px, 7vw, 78px); }
 
 /* Tool rows */
@@ -58,7 +65,10 @@
 .tool-name { transition: color 180ms ease; }
 
 @media (max-width: 640px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  .hero-logo { order: -1; width: 92px; }
   .wallet { grid-template-columns: minmax(0, 1fr); padding: 20px; }
+  .wallet .acts { margin-top: 16px; }
   .tool { padding: 20px; gap: 8px 14px; }
   .tool-name { font-size: 32px; }
   .tool .go { width: 40px; height: 40px; }
@@ -68,7 +78,7 @@
 <body>
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="./" aria-label="ROB RUN Tools home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#f4b740"/><rect x="6.5" y="10" width="19" height="12" rx="2.5" fill="none" stroke="#1f1705" stroke-width="2.2"/><circle cx="16" cy="16" r="2.7" fill="#1f1705"/><path d="M10.4 13.4v5.2M21.6 13.4v5.2" stroke="#1f1705" stroke-width="2" stroke-linecap="round"/></svg><b>ROB RUN</b><small>Tools</small></a>
+    <a class="brand" href="./" aria-label="ROB RUN Tools home"><img class="brand-mark" src="assets/logo-96.png" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
     <nav class="nav-links" aria-label="Main">
       <a href="./" class="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
       <a href="split/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
@@ -81,19 +91,21 @@
 
 <main class="page">
   <header class="hero">
-    <h1>ROB RUN <span>Tools</span></h1>
-    <p class="sub">Split the take with your crew, plan what to unlock next, and check what the fence pays before you sell.</p>
+    <div class="hero-text">
+      <h1>ROB RUN <span>Tools</span></h1>
+      <p class="sub">Split the take with your crew, plan what to unlock next, and check what the fence pays before you sell.</p>
+    </div>
+    <img class="hero-logo" src="assets/logo.png" width="250" height="250" alt="ROB RUN Tools logo: a masked runner carrying a wrench">
   </header>
 
   <section class="panel wallet empty" id="wallet" aria-labelledby="walletLabel">
-    <div>
+    <div class="wallet-main">
       <span class="label" id="walletLabel">Your cut this wipe</span>
       <div class="cash" id="cash">No runs yet</div>
       <div class="wallet-facts" id="walletFacts">Log your first run and your running total shows up here.</div>
+      <div class="acts"><a class="btn primary" href="split/#add" id="walletGo">Log a run</a></div>
     </div>
-    <div class="acts">
-      <a class="btn primary" href="split/#add" id="walletGo">Log a run</a>
-    </div>
+    <div id="pile" aria-hidden="true"></div>
     <div class="meter" id="meter" hidden><i id="meterFill"></i></div>
   </section>
 
@@ -150,6 +162,8 @@
 
   // Your cut, same math as the split calculator
   var s = read("robrun-split-v1");
+  var pile = window.RR && RR.pile ? RR.pile($("pile")) : null;
+  if (pile && !(s && Array.isArray(s.runs) && s.runs.length && !s.example)) pile.update(0, 1000000, { animate: false });
   if (s && Array.isArray(s.runs) && s.runs.length && !s.example) {
     var fee = Number(s.fee) || 0, total = 0;
     s.runs.forEach(function (r) { total += Math.max(0, (Number(r.take) || 0) - (Number(r.costs) || 0)) / (Number(r.crew) || 1) * (1 - fee / 100); });
@@ -157,7 +171,10 @@
     var w = $("wallet"); w.classList.remove("empty");
     var cash = $("cash");
     cash.innerHTML = '<span class="cur">$</span><span id="cashNum">0</span>';
-    var go = function () { if (window.RR) RR.countUp($("cashNum"), total, { format: function (v) { return fmt.format(Math.round(v)); } }); else $("cashNum").textContent = fmt.format(total); };
+    var go = function () {
+      if (window.RR) RR.countUp($("cashNum"), total, { format: function (v) { return fmt.format(Math.round(v)); } }); else $("cashNum").textContent = fmt.format(total);
+      if (pile) pile.update(total, goal, { fast: true });
+    };
     if (document.readyState === "complete") go(); else window.addEventListener("load", go);
     $("walletFacts").innerHTML = "<span><b>" + n + "</b> " + (n === 1 ? "run" : "runs") + "</span><span><b>" + money(total / n) + "</b> average</span>" +
       (goal ? "<span>" + (left ? "<b>" + money(left) + "</b> to your " + money(goal) + " goal" : "<b>Goal hit</b> (" + money(goal) + ")") + "</span>" : "");

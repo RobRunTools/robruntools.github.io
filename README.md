@@ -15,8 +15,9 @@ Plain HTML, CSS and JavaScript with no build step.
 
 ## How it's put together
 
-- `assets/site.css`: colors, type, nav, panels, buttons, motion. Every page uses it.
-- `assets/site.js`: shared behaviour (`window.RR`): the sliding nav highlight, the section jump bar, animated collapsibles, back-to-top, toasts and the money count-up. Respects reduced motion.
+- `assets/site.css`: colors (taken from the crew logo: navy, orange, mint), type, nav, panels, buttons, motion. Every page uses it.
+- `assets/logo.png` and sizes: the crew logo, with `favicon-32.png`, `apple-touch-icon.png` and `og.png` for link previews in Discord.
+- `assets/site.js`: shared behaviour (`window.RR`): the laundering-desk cash pile, the sliding nav highlight, the section jump bar, animated collapsibles, back-to-top, toasts and the money count-up. Respects reduced motion.
 - `assets/fonts/`: self-hosted Big Shoulders Display and Instrument Sans (SIL OFL) and Permanent Marker (Apache 2.0).
 - Icons and the Larry card on the unlock tree are drawn from scratch. No game art is used: Kefir's EULA doesn't allow copying it without written permission.
 
