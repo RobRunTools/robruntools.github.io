@@ -7,123 +7,148 @@
 <meta name="description" content="Look up what any ROB RUN item sells for at the fence, add up your haul and split it with your crew.">
 <meta property="og:title" content="ROB RUN Price Check">
 <meta property="og:description" content="Look up what any item sells for, add up your haul and split it with your crew.">
-<meta name="theme-color" content="#0d0e11">
+<meta name="theme-color" content="#162027">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
 <style>
-:root { --r-common: #9aa0a8; --r-uncommon: #4cc38a; --r-epic: #a57cf0; --r-legendary: #f0b429; --r-exotic: #ef6161; }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+:root { --r-common: #a3adb1; --r-uncommon: #7ccb9d; --r-epic: #a98cf2; --r-legendary: #f4b740; --r-exotic: #ef6b5e; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
 .layout > * { min-width: 0; }
-.lookup { display: grid; gap: 12px; padding: 16px; border-bottom: 1px solid var(--line); }
-#q { height: 52px; font-size: 20px; }
-.filters { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: end; }
-.filters .field { flex: 1 1 160px; max-width: 220px; }
-.filters select { height: 36px; font-size: 13px; font-family: var(--font-mono); }
+.lookup { display: grid; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--rope); }
+.find { position: relative; }
+.find svg { position: absolute; left: 16px; top: 50%; width: 20px; height: 20px; margin-top: -10px; color: var(--smoke); pointer-events: none; }
+#q { height: 56px; font-size: 19px; padding-left: 46px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.filters .field { flex: 1 1 170px; max-width: 240px; }
+.filters select { height: 40px; font-size: 14.5px; }
 .rars { display: flex; flex-wrap: wrap; gap: 6px; }
 .rchip {
-  height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: transparent; cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc, var(--muted));
+  display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
+  border: 1px solid var(--rope); border-radius: 99px; background: transparent; cursor: pointer;
+  color: var(--smoke); font: 500 14px/1 var(--font-body);
+  transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
 }
-.rchip[aria-pressed="true"] { border-color: var(--rc, var(--accent)); background: rgba(255, 255, 255, 0.04); }
-.rchip.all { --rc: var(--text); }
+.rchip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rc, var(--receipt)); }
+.rchip.all::before { display: none; }
+.rchip:hover { color: var(--receipt); border-color: var(--smoke); }
+.rchip[aria-pressed="true"] { border-color: var(--rc, var(--sodium)); color: var(--receipt); background: rgba(255, 255, 255, 0.05); }
+.rchip.all[aria-pressed="true"] { border-color: var(--sodium); background: var(--sodium-soft); color: var(--sodium); }
 .results { list-style: none; margin: 0; padding: 0; }
-.results > li { border-bottom: 1px solid var(--line); border-left: 3px solid var(--rc, var(--line)); }
+.results > li { position: relative; border-bottom: 1px solid var(--rope); }
+.results > li::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--rc, var(--rope)); }
 .results > li:last-child { border-bottom: 0; }
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 4px 12px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; }
 .row .open {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center;
-  padding: 11px 6px 11px 16px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center;
+  padding: 13px 8px 13px 20px; border: 0; background: transparent; color: var(--receipt); text-align: left; cursor: pointer; font: inherit;
+  transition: background-color 140ms ease;
 }
-.row .open:hover .nm { color: var(--accent); }
-.nm { font-weight: 500; }
-.meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin-top: 2px; font-size: 13px; color: var(--muted); }
-.rar { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rc, var(--muted)); }
-.price { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.price .hi { display: block; font-size: 17px; color: var(--accent); }
-.price .lo { display: block; font-size: 12px; color: var(--muted); }
+.row .open:hover { background: rgba(255, 255, 255, 0.025); }
+.row .open:hover .nm { color: var(--sodium); }
+.nm { font-weight: 600; font-size: 16px; transition: color 140ms ease; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; margin-top: 2px; font-size: 13.5px; color: var(--smoke); }
+.rar { font-weight: 600; color: var(--rc, var(--smoke)); }
+.unl { color: var(--smoke); }
+.price { text-align: right; font-variant-numeric: tabular-nums; }
+.price .hi { display: block; font-family: var(--font-display); font-weight: 700; font-size: 24px; line-height: 1.05; color: var(--receipt); }
+.price .lo { display: block; font-size: 13px; color: var(--smoke); }
 .add {
-  width: 36px; height: 36px; margin-right: 12px; border: 1px solid var(--line); border-radius: 4px; background: transparent;
-  color: var(--text); font-size: 20px; line-height: 1; cursor: pointer;
+  width: 40px; height: 40px; margin-right: 14px; border: 1px solid var(--rope); border-radius: 10px; background: var(--pier-2);
+  color: var(--receipt); font-size: 22px; line-height: 1; cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background-color 140ms ease;
 }
-.add:hover { border-color: var(--accent); color: var(--accent); }
-.add.in { border-color: rgba(240, 180, 41, 0.6); color: var(--accent); font-family: var(--font-mono); font-size: 13px; }
-.more { display: grid; gap: 10px; padding: 2px 16px 16px; font-size: 14px; color: #c9ccd2; }
-.more .facts { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+.add:hover { border-color: var(--sodium); color: var(--sodium); }
+.add.in { border-color: var(--sodium); background: var(--sodium); color: var(--on-sodium); font-size: 14px; font-weight: 700; }
+.more { display: grid; gap: 12px; padding: 4px 20px 18px; font-size: 15px; color: #d3d6d2; }
+.more.anim { animation: rise 320ms var(--ease) both; }
+.more .facts { display: flex; flex-wrap: wrap; gap: 12px 30px; }
 .more .fact { display: grid; gap: 2px; }
-.more .fact .v { font-family: var(--font-mono); font-size: 15px; color: var(--text); }
-.more .note { margin: 0; color: var(--muted); font-size: 13px; }
-.more .note.hot { color: var(--good); }
-.more .links { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; }
+.more .fact .v { font-size: 16px; font-weight: 600; color: var(--receipt); font-variant-numeric: tabular-nums; }
+.more .note { margin: 0; color: var(--smoke); font-size: 14px; }
+.more .note.hot { color: var(--cash); }
+.more .links { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; }
 .r-common { --rc: var(--r-common); } .r-uncommon { --rc: var(--r-uncommon); } .r-epic { --rc: var(--r-epic); }
 .r-legendary { --rc: var(--r-legendary); } .r-exotic { --rc: var(--r-exotic); }
-.count { margin: 0; padding: 10px 16px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); }
-.count button { margin-left: 8px; }
-.empty { padding: 22px 16px; margin: 0; color: var(--muted); }
-.src { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.count { margin: 0; padding: 12px 20px; font-size: 14px; color: var(--smoke); border-top: 1px solid var(--rope); }
+.count button { margin-left: 10px; }
+.empty { padding: 24px 20px; margin: 0; color: var(--smoke); }
+.src { margin: 4px 0 0; font-size: 14px; color: var(--smoke); }
 
 /* Haul */
-.haul { position: sticky; top: 72px; display: grid; gap: 14px; padding: 16px; }
-.haul-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 40vh; overflow: auto; }
-.haul-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 14px; padding-left: 8px; border-left: 2px solid var(--rc, var(--line)); }
-.haul-list .hn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.haul-list .hv { display: block; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 3px; }
-.qty button { width: 26px; height: 26px; border: 0; background: transparent; color: var(--text); cursor: pointer; font-size: 15px; }
-.qty button:hover { color: var(--accent); }
-.qty input { width: 34px; height: 26px; border: 0; background: transparent; color: var(--text); text-align: center; font-family: var(--font-mono); font-size: 13px; padding: 0; }
-.haul-list .x { width: 24px; height: 24px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
-.haul-list .x:hover { color: var(--bad); }
-.hsum { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.hrow { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; }
-.hrow .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.hrow.big .v { font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--accent); }
-.stepper { display: inline-flex; align-items: center; height: 32px; border: 1px solid var(--line); border-radius: 4px; background: var(--field); }
-.stepper button { width: 30px; height: 100%; border: 0; background: transparent; color: var(--text); font-size: 16px; cursor: pointer; }
-.stepper output { min-width: 26px; text-align: center; font-family: var(--font-mono); font-size: 14px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-.seg button { height: 32px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--field); color: var(--accent); }
+.haul { position: sticky; top: calc(var(--nav-h) + 74px); display: grid; gap: 16px; padding: 20px; }
+.haul-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 40vh; overflow: auto; }
+.haul-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 15px; padding: 4px 0 4px 10px; border-left: 3px solid var(--rc, var(--rope)); border-radius: 2px; }
+.haul-list .hn { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.haul-list .hv { display: block; font-size: 13px; color: var(--smoke); font-variant-numeric: tabular-nums; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--rope); border-radius: 8px; background: var(--pier-2); }
+.qty button { width: 28px; height: 28px; border: 0; background: transparent; color: var(--receipt); cursor: pointer; font-size: 16px; }
+.qty button:hover { color: var(--sodium); }
+.qty input { width: 34px; height: 28px; border: 0; background: transparent; color: var(--receipt); text-align: center; font-size: 14px; font-weight: 600; padding: 0; box-shadow: none; border-radius: 0; }
+.haul-list .x { width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--smoke); cursor: pointer; font-size: 17px; }
+.haul-list .x:hover { color: var(--siren); background: var(--siren-soft); }
+.hsum { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--rope); }
+.hrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 15px; }
+.hrow .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+.hrow.big { align-items: flex-end; }
+.hrow.big .v { font-family: var(--font-display); font-weight: 800; font-size: 46px; line-height: 0.9; color: var(--sodium); }
+.haul .stepper { height: 36px; }
+.haul .stepper button { width: 32px; font-size: 17px; }
+.haul .stepper output { font-size: 15px; }
 .haul .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.hmsg { font-size: 13px; color: var(--muted); }
+.hmsg { font-size: 14px; color: var(--smoke); }
 .hmsg:empty { display: none; }
-.haul-empty { margin: 0; color: var(--muted); font-size: 14px; }
+.haul-empty { margin: 0; color: var(--smoke); font-size: 15px; }
 .bagbar {
-  display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 30;
-  padding: 12px 14px; border: 1px solid rgba(240, 180, 41, 0.5); border-radius: 6px; background: #17150f;
-  color: var(--text); font: inherit; text-align: left; cursor: pointer;
-  justify-content: space-between; align-items: center; gap: 10px;
+  position: fixed; left: 12px; right: 12px; bottom: calc(var(--tab-h) + 12px + env(safe-area-inset-bottom, 0px)); z-index: 36;
+  display: none; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 13px 16px; border: 0; border-radius: 14px; background: var(--sodium); color: var(--on-sodium);
+  font: 600 15px/1.2 var(--font-body); text-align: left; cursor: pointer; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
 }
-.bagbar .v { font-family: var(--font-mono); color: var(--accent); }
+.bagbar .v { font-family: var(--font-display); font-weight: 800; font-size: 22px; }
+@keyframes slideup { from { transform: translateY(120%); } }
 @media (max-width: 980px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .haul { position: static; }
-  .bagbar.show { display: flex; }
-  body.has-bag .page { padding-bottom: 90px; }
+  .bagbar.show { display: flex; animation: slideup 380ms var(--ease); }
+  body.has-bag .page { padding-bottom: 100px; }
+  body.has-bag .to-top { bottom: calc(var(--tab-h) + 84px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (max-width: 640px) {
+  .lookup { padding: 16px; }
+  .row .open { padding-left: 16px; }
+  .price .hi { font-size: 22px; }
+  .filters .field { max-width: none; }
 }
 </style>
 </head>
 <body>
-<nav class="nav" aria-label="Main">
+<header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
-    <div class="nav-links">
-      <a href="../split/">Split</a>
-      <a href="../upgrades/">Unlocks</a>
-      <a href="./" aria-current="page">Prices</a>
-      <a href="../faq/">FAQ</a>
-    </div>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#f4b740"/><rect x="6.5" y="10" width="19" height="12" rx="2.5" fill="none" stroke="#1f1705" stroke-width="2.2"/><circle cx="16" cy="16" r="2.7" fill="#1f1705"/><path d="M10.4 13.4v5.2M21.6 13.4v5.2" stroke="#1f1705" stroke-width="2" stroke-linecap="round"/></svg><b>ROB RUN</b><small>Tools</small></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
+      <a href="../split/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
+      <a href="../upgrades/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5.5" cy="19" r="2.2"/><circle cx="18.5" cy="19" r="2.2"/><path d="M12 7.2V12M12 12H5.5v4.8M12 12h6.5v4.8"/></svg><span>Unlocks</span></a>
+      <a href="../items/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.6V4.5h8.1l8.9 8.9-8 8z"/><circle cx="8.2" cy="9.2" r="1.6"/></svg><span>Prices</span></a>
+      <a href="../faq/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.6a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6"/><path d="M12 17.1v.2"/></svg><span>FAQ</span></a>
+    </nav>
   </div>
-</nav>
+</header>
 
 <main class="page">
   <header class="page-head">
     <h1>Price check</h1>
     <p class="sub">Search an item to see what the fence pays. Hit + to add it to your haul, and it adds everything up and splits it with your crew.</p>
   </header>
+
+  <nav class="jump" aria-label="On this page">
+    <a href="#search">Search items</a>
+    <a href="#haulPanel">Your haul</a>
+    <a href="#sources">Where prices come from</a>
+  </nav>
   <div id="app"><p class="empty">Loading prices...</p></div>
 </main>
 
@@ -131,8 +156,8 @@
 
 <footer class="foot">
   <div class="foot-in">
-    <span>The fence pays more with higher Notoriety. Treat these as a guide.</span>
-    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
+    <p>Your haul is saved on this device only.</p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="../faq/#sources">Sources</a></p>
   </div>
 </footer>
 
@@ -161,7 +186,7 @@
 
   var haul = loadHaul();
   if (!haul.crew) haul.crew = splitCrew();
-  var items = [], byId = {}, ships = {}, open = null, showAll = false, rarity = "", src = {};
+  var items = [], byId = {}, ships = {}, open = null, justOpened = null, showAll = false, rarity = "", src = {};
 
   Promise.all([
     fetch("../data/items.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
@@ -183,10 +208,11 @@
     items.forEach(function (it) { if (it.category && cats.indexOf(it.category) < 0) cats.push(it.category); });
     cats.sort();
     app.innerHTML =
-      '<div class="layout"><section class="panel">' +
+      '<div class="layout"><section class="panel" id="search" data-spy aria-label="Search items">' +
       '<div class="lookup">' +
-      '<label for="q" style="position:absolute;left:-9999px">Search items</label>' +
-      '<input type="search" id="q" placeholder="Search, e.g. gold bar, laptop, ring" autocomplete="off" spellcheck="false">' +
+      '<div class="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>' +
+      '<label for="q" class="sr-only">Search items</label>' +
+      '<input type="search" id="q" placeholder="Search, like gold bar, laptop or ring" autocomplete="off" spellcheck="false" data-slash></div>' +
       '<div class="filters">' +
       '<div class="field"><label for="cat">Type</label><select id="cat"><option value="">Everything</option>' +
       cats.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("") + "</select></div>" +
@@ -196,7 +222,7 @@
       RARITIES.map(function (r) { return '<button type="button" class="rchip r-' + r.toLowerCase() + '" data-r="' + r + '" aria-pressed="false">' + r + "</button>"; }).join("") +
       "</div></div>" +
       '<ul class="results" id="results"></ul><p class="count" id="count"></p></section>' +
-      '<aside class="panel haul" id="haulPanel" aria-labelledby="haulTitle">' +
+      '<aside class="panel haul" id="haulPanel" data-spy aria-labelledby="haulTitle">' +
       '<h2 class="panel-title" id="haulTitle">Your haul</h2>' +
       '<ul class="haul-list" id="haulList"></ul>' +
       '<p class="haul-empty" id="haulEmpty">Nothing yet. Hit + on anything you grabbed.</p>' +
@@ -209,7 +235,7 @@
       '<div class="actions"><button type="button" class="btn small primary" id="logRun">Log as a run</button><button type="button" class="btn small" id="copyHaul">Copy for Discord</button><button type="button" class="btn small" id="clearHaul">Clear</button></div>' +
       '<span class="hmsg" id="hmsg" role="status"></span>' +
       "</aside></div>" +
-      '<p class="src">Prices: <a href="' + esc(src.sourceUrl) + '">ROB RUN Wiki</a> open data, game version ' + esc(src.version) + ". Unlock costs: robrungame.com. " + esc(src.note || "") + "</p>";
+      '<p class="src" id="sources" data-spy>Fence prices come from <a href="' + esc(src.sourceUrl) + '">ROB RUN Wiki</a> open data for game version ' + esc(src.version) + '. Unlock costs come from the <a href="https://robrungame.com/planner/">robrungame.com planner</a>. Only items with a fence price are listed. The fence pays more with higher Notoriety, so treat these as a guide.</p>';
     ["q", "cat", "sort", "rars", "results", "count", "haulList", "haulEmpty", "hsum", "hRange", "cOut", "cMinus", "cPlus", "hEach", "basis", "logRun", "copyHaul", "clearHaul", "hmsg", "haulPanel"]
       .forEach(function (id) { el[id] = document.getElementById(id); });
     el.bagbar = document.getElementById("bagbar");
@@ -227,9 +253,17 @@
     });
     el.results.addEventListener("click", function (e) {
       var add = e.target.closest("button[data-add]");
-      if (add) { var id = add.getAttribute("data-add"); haul.items[id] = (haul.items[id] || 0) + 1; saveHaul(); render(); renderHaul(); flash(); return; }
+      if (add) {
+        var id = add.getAttribute("data-add"); haul.items[id] = (haul.items[id] || 0) + 1; saveHaul(); render(); renderHaul();
+        if (window.RR) {
+          RR.pop(el.results.querySelector('button[data-add="' + id + '"]'));
+          RR.flash(el.haulList.querySelector('input[data-id="' + id + '"]') && el.haulList.querySelector('input[data-id="' + id + '"]').closest("li"));
+          RR.pop(el.hEach);
+        }
+        return;
+      }
       var o = e.target.closest("button[data-open]");
-      if (o) { var oid = o.getAttribute("data-open"); open = open === oid ? null : oid; render(); }
+      if (o) { var oid = o.getAttribute("data-open"); open = open === oid ? null : oid; justOpened = open; render(); justOpened = null; }
     });
     el.count.addEventListener("click", function (e) { if (e.target.closest("button[data-all]")) { showAll = true; render(); } });
     el.haulList.addEventListener("click", function (e) {
@@ -251,7 +285,7 @@
     el.clearHaul.addEventListener("click", function () { haul.items = {}; saveHaul(); render(); renderHaul(); });
     el.logRun.addEventListener("click", logRun);
     el.copyHaul.addEventListener("click", copyHaul);
-    el.bagbar.addEventListener("click", function () { el.haulPanel.scrollIntoView({ behavior: "smooth", block: "start" }); });
+    el.bagbar.addEventListener("click", function () { if (window.RR) RR.scrollTo(el.haulPanel); else el.haulPanel.scrollIntoView(); });
     render(); renderHaul();
     try { if (window.matchMedia("(pointer: fine)").matches) el.q.focus(); } catch (e) { /* ignore */ }
   }
@@ -273,8 +307,9 @@
     });
     var limit = showAll ? list.length : 60, shown = list.slice(0, limit);
     el.results.innerHTML = shown.map(rowHtml).join("") || '<li class="empty">Nothing matches that. Try one word, like "watch".</li>';
-    el.count.innerHTML = list.length + (list.length === 1 ? " item" : " items") +
-      (list.length > shown.length ? ' · showing ' + shown.length + '<button type="button" class="linkish" data-all="1">Show all</button>' : "");
+    el.count.innerHTML = list.length > shown.length
+      ? "Showing " + shown.length + " of " + list.length + ' items.<button type="button" class="linkish" data-all="1">Show all ' + list.length + "</button>"
+      : list.length + (list.length === 1 ? " item" : " items");
   }
 
   function rowHtml(it) {
@@ -293,19 +328,19 @@
         if (sh.buy && it.max > sh.buy) shipLine += '<p class="note hot">The fence can pay up to ' + money(it.max) + " for one, more than the " + money(sh.buy) + " it costs on the Black Market.</p>";
         else if (sh.buy) shipLine += '<p class="note">Costs ' + money(sh.buy) + " on the Black Market, the fence pays " + money(it.min) + "–" + money(it.max) + ".</p>";
       }
-      more = '<div class="more">' +
+      more = '<div class="more' + (justOpened === it.id ? " anim" : "") + '">' +
         '<div class="facts">' +
         '<div class="fact"><span class="label">Fence (low)</span><span class="v">' + money(it.min) + "</span></div>" +
         '<div class="fact"><span class="label">Fence (high)</span><span class="v">' + money(it.max) + "</span></div>" +
         '<div class="fact"><span class="label">Rarity</span><span class="v rar">' + esc(it.rarity || "–") + "</span></div>" +
         '<div class="fact"><span class="label">Type</span><span class="v">' + esc(it.category) + "</span></div>" +
         "</div>" + shipLine +
-        '<div class="links">' + (sh ? '<a href="../upgrades/#' + hashOf(it.id) + '">See it in the unlock tree →</a>' : "") +
-        '<a href="' + esc(src.itemUrl.replace("{id}", encodeURIComponent(it.id))) + '" target="_blank" rel="noopener">Full page on ROB RUN Wiki ↗</a></div></div>';
+        '<div class="links">' + (sh ? '<a href="../upgrades/#' + hashOf(it.id) + '">See it in the unlock tree</a>' : "") +
+        '<a href="' + esc(src.itemUrl.replace("{id}", encodeURIComponent(it.id))) + '" target="_blank" rel="noopener">Full page on ROB RUN Wiki</a></div></div>';
     }
     return '<li class="' + rc(it) + '"><div class="row">' +
       '<button type="button" class="open" data-open="' + esc(it.id) + '" aria-expanded="' + isOpen + '">' +
-      '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="rar">' + esc(it.rarity || "–") + "</span><span>" + esc(it.category) + "</span>" + (ships[it.id] ? "<span>· unlockable</span>" : "") + "</div></div>" +
+      '<div><div class="nm">' + esc(it.name) + '</div><div class="meta"><span class="rar">' + esc(it.rarity || "–") + "</span><span>" + esc(it.category) + "</span>" + (ships[it.id] ? '<span class="unl">In the unlock tree</span>' : "") + "</div></div>" +
       '<div class="price"><span class="hi">' + money(it.max) + '</span><span class="lo">from ' + money(it.min) + "</span></div></button>" +
       '<button type="button" class="add' + (inHaul ? " in" : "") + '" data-add="' + esc(it.id) + '" aria-label="Add ' + esc(it.name) + ' to haul">' + (inHaul ? "×" + inHaul : "+") + "</button>" +
       "</div>" + more + "</li>";
@@ -337,7 +372,7 @@
     el.bagbar.classList.toggle("show", !!t.count);
     document.body.classList.toggle("has-bag", !!t.count);
     el.bagbarText.textContent = "Haul: " + t.count + (t.count === 1 ? " item" : " items");
-    el.bagbarVal.textContent = money(t.pick / haul.crew) + " each →";
+    el.bagbarVal.textContent = money(t.pick / haul.crew) + " each";
   }
 
   function flash() { el.hmsg.textContent = ""; }
@@ -354,7 +389,8 @@
     s.nextId = nextId + 1;
     try {
       localStorage.setItem(SPLIT_KEY, JSON.stringify(s));
-      el.hmsg.innerHTML = "Logged " + money(t.pick) + ' as a run. <a href="../split/">Open the split calculator →</a>';
+      el.hmsg.innerHTML = "Logged " + money(t.pick) + ' as a run. <a href="../split/#log">Open the split calculator</a>';
+      if (window.RR) RR.toast("Logged " + money(t.pick) + " as a run");
       haul.items = {}; saveHaul(); render(); renderHaul();
     } catch (e) { el.hmsg.textContent = "Couldn't save the run on this browser."; }
   }
@@ -366,7 +402,7 @@
     lines.push("Fence pays: " + money(t.lo) + " – " + money(t.hi));
     lines.push("Split " + haul.crew + " ways: " + money(t.lo / haul.crew) + " – " + money(t.hi / haul.crew) + " each");
     var text = lines.join("\n");
-    function done(m) { el.hmsg.textContent = m; setTimeout(function () { if (el.hmsg.textContent === m) el.hmsg.textContent = ""; }, 3000); }
+    function done(m) { if (window.RR) { RR.toast(m); return; } el.hmsg.textContent = m; setTimeout(function () { if (el.hmsg.textContent === m) el.hmsg.textContent = ""; }, 3000); }
     try { navigator.clipboard.writeText(text).then(function () { done("Copied. Paste it in Discord."); }, function () { done("Couldn't copy here."); }); }
     catch (e) { done("Couldn't copy here."); }
   }

@@ -4,30 +4,37 @@ Calculators, an unlock tree and quick answers for ROB RUN. Fan-made, not affilia
 
 **Site:** https://robruntools.github.io
 
-| Page | Status |
-|---|---|
-| [Split calculator](https://robruntools.github.io/split/) | Live |
-| [Unlock tree](https://robruntools.github.io/upgrades/) | Live (data: [robrungame.com planner](https://robrungame.com/planner/)) |
-| [Price check](https://robruntools.github.io/items/) | Live (data: [ROB RUN Wiki open data](https://robrunwiki.com/en/data/)) |
-| [FAQ](https://robruntools.github.io/faq/) | Live |
+| Page | What it does | Data |
+|---|---|---|
+| [Split calculator](https://robruntools.github.io/split/) | Splits each run, tracks your cut, averages, best run, cash per hour and past wipes | Saved in your browser |
+| [Unlock tree](https://robruntools.github.io/upgrades/) | Larry's Shipments laid out like the game, with plan totals | [robrungame.com planner](https://robrungame.com/planner/), checked Nov 21, 2026 against its Nov 17 data |
+| [Price check](https://robruntools.github.io/items/) | Fence prices for 373 items, haul builder, logs a haul as a run | [ROB RUN Wiki open data](https://robrunwiki.com/en/data/), game version 0.7.0 |
+| [FAQ](https://robruntools.github.io/faq/) | Wipes, cash, dying, selling, unlocks, cops, patch log | Kefir's Steam and Discord posts, checked Nov 21, 2026 |
 
-Plain HTML and CSS, no build step. Shared styles live in `assets/site.css`.
+Plain HTML, CSS and JavaScript with no build step.
+
+## How it's put together
+
+- `assets/site.css`: colors, type, nav, panels, buttons, motion. Every page uses it.
+- `assets/site.js`: shared behaviour (`window.RR`): the sliding nav highlight, the section jump bar, animated collapsibles, back-to-top, toasts and the money count-up. Respects reduced motion.
+- `assets/fonts/`: self-hosted Big Shoulders Display and Instrument Sans (SIL OFL) and Permanent Marker (Apache 2.0).
+- Icons and the Larry card on the unlock tree are drawn from scratch. No game art is used: Kefir's EULA doesn't allow copying it without written permission.
 
 ## Data
-
-The unlock tree and price check read from `data/`. Once a file has items in it, the page switches from "under construction" to the real tool.
 
 `data/shipments.json`, one entry per unlock:
 
 ```json
-{ "id": "longhorn-wild", "name": "Longhorn Wild", "branch": "Vehicles", "tier": "III",
-  "unlock": 500000, "buy": 4500000, "after": "royal-e", "settlement": 3, "jail": 0 }
+{ "id": "longhorn_wild", "name": "Longhorn Wild", "branch": "Vehicles", "tier": "III", "settlement": 3,
+  "unlock": 500000, "buy": 4500000, "city": null, "jail": 0, "after": "royal_e", "url": "https://robrungame.com/items/longhorn-wild/" }
 ```
 
 `after` is the id of the unlock that has to come first (`null` for the first one in a branch). `jail` is years of accumulated jail time.
 
-`data/items.json`, one entry per item:
+`data/items.json`, one entry per item with a fence price:
 
 ```json
-{ "name": "AIR-P Laptop", "category": "Electronics", "price": 1200 }
+{ "name": "Gold Bar", "category": "Valuables", "rarity": "Legendary", "min": 52000, "max": 78000, "id": "gold_bar_1" }
 ```
+
+Saved in the browser (same site, so the pages share them): `robrun-split-v1` (runs and goal), `robrun-unlocks-v2` (plan and owned), `robrun-haul-v1` (haul).

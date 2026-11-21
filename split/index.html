@@ -7,137 +7,109 @@
 <meta name="description" content="Split each ROB RUN take with your crew, track your cut, averages and cash per hour across the wipe.">
 <meta property="og:title" content="ROB RUN Split Calculator">
 <meta property="og:description" content="Split each run with your crew. Tracks your cut, averages, best run and cash per hour.">
-<meta name="theme-color" content="#0d0e11">
+<meta name="theme-color" content="#162027">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
 <style>
-/* Add-run bar */
-.addbar { padding: 18px; display: grid; gap: 12px; }
-.addbar form { display: grid; gap: 12px; }
-.add-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 16px; }
-.add-row .grow { flex: 1 1 220px; }
-#take { height: 52px; font-size: 20px; }
-.addbar .btn.primary { height: 52px; padding: 0 26px; font-size: 15px; }
-.extra-row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; }
-.extra-row .field { flex: 1 1 180px; max-width: 260px; }
-.extra-row input { height: 38px; font-size: 14px; }
-.stepper {
-  display: flex; align-items: center; height: 52px;
-  border: 1px solid var(--line); border-radius: 4px; background: var(--field);
-}
-.stepper button {
-  width: 42px; height: 100%; border: 0; background: transparent;
-  color: var(--text); font-size: 20px; line-height: 1; cursor: pointer;
-}
-.stepper button:hover { color: var(--accent); }
-.stepper button:disabled { opacity: 0.3; cursor: default; color: var(--text); }
-.stepper output { min-width: 34px; text-align: center; font-family: var(--font-mono); font-size: 17px; }
-.each-wrap { flex: 0 1 170px; }
+/* Add a run */
+.addbar { padding: 22px; display: grid; gap: 14px; }
+.addbar form { display: grid; gap: 14px; }
+.add-row { display: flex; flex-wrap: wrap; align-items: end; gap: 14px 18px; }
+.add-row .grow { flex: 1 1 240px; }
+#take { height: 58px; font-size: 24px; font-weight: 600; padding: 0 16px; }
+.addbar .stepper { height: 58px; }
+.addbar .btn.primary { height: 58px; padding: 0 30px; font-size: 16.5px; }
+.extra-row { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; }
+.extra-row .field { flex: 1 1 200px; max-width: 300px; }
+.extra-row input { height: 42px; font-size: 15px; }
+.each-wrap { flex: 0 1 190px; }
 .each {
-  height: 52px; display: flex; align-items: center;
-  font-family: var(--font-mono); font-size: 22px; font-weight: 500;
-  color: var(--accent); font-variant-numeric: tabular-nums;
+  height: 58px; display: flex; align-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 40px; line-height: 1;
+  color: var(--sodium); font-variant-numeric: tabular-nums;
 }
-.each.empty { color: var(--muted); font-size: 18px; }
-.hint { margin: 0; font-size: 13px; color: var(--muted); }
-.hint.bad { color: var(--bad); }
+.each.empty { color: var(--smoke); font-size: 30px; }
+.hint { margin: 0; font-size: 14px; color: var(--smoke); }
+.hint.bad { color: var(--siren); }
 
-/* Stats */
-.stats { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(4, minmax(0, 1fr)); }
-.stat { display: grid; gap: 6px; align-content: start; padding: 16px 18px; border-left: 1px solid var(--line); }
-.stat:first-child { border-left: 0; }
-.stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.big { font-family: var(--font-display); font-weight: 700; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; }
-.val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.val.ok { color: var(--good); }
-.val small { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; color: var(--muted); }
-.goal-row {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  border-top: 1px solid var(--line);
+/* Totals */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; }
+.stat { display: grid; gap: 6px; align-content: start; padding: 18px 22px; border-left: 1px solid var(--rope); }
+.stat.main { grid-column: 1 / -1; border-left: 0; border-bottom: 1px solid var(--rope); padding: 24px 22px 20px; gap: 4px; }
+.stats > .stat:nth-child(2) { border-left: 0; }
+.stat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.stat-top .label { font-size: 15px; }
+.big {
+  font-family: var(--font-display); font-weight: 800; line-height: 0.86; letter-spacing: -0.01em;
+  font-size: clamp(64px, 9vw, 112px); font-variant-numeric: tabular-nums; margin-top: 10px;
 }
-.goal-row .stat { flex: 0 0 160px; border-left: 0; padding-right: 8px; }
-.goal-row .progress { flex: 1 1 260px; }
-.progress { position: relative; padding: 24px 18px 28px 8px; }
-.bar { position: relative; height: 10px; border-radius: 2px; background: var(--field); }
-.fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 2px; background: var(--accent); transition: width 250ms ease; }
-.fill.done { background: var(--good); }
-.mark { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--text); }
-.mark.pay { background: var(--muted); }
-.mark-label {
-  position: absolute; font-family: var(--font-mono); font-size: 11px;
-  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap;
-}
+.big .cur { color: var(--smoke); font-weight: 700; margin-right: 0.04em; }
+.val { font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.val.ok { color: var(--cash); }
+.val small { display: block; margin-top: 4px; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--smoke); }
+.goal-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--rope); }
+.goal-row .stat { flex: 0 0 170px; border-left: 0; padding-right: 8px; }
+.goal-row .progress { flex: 1 1 280px; }
+.progress { position: relative; padding: 28px 22px 32px 10px; }
+.bar { position: relative; height: 10px; border-radius: 99px; background: var(--pier-3); }
+.fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 99px; background: var(--sodium); transition: width 700ms var(--ease), background-color 300ms ease; }
+.fill.done { background: var(--cash); }
+.mark { position: absolute; top: -7px; bottom: -7px; width: 2px; border-radius: 2px; background: var(--receipt); transition: left 500ms var(--ease); }
+.mark.pay { background: var(--smoke); }
+.mark-label { position: absolute; font-size: 13px; font-weight: 500; color: var(--smoke); white-space: nowrap; transition: left 500ms var(--ease); }
 .mark-label.above { top: 4px; }
-.mark-label.below { bottom: 6px; color: var(--text); }
+.mark-label.below { bottom: 6px; color: var(--receipt); }
 
 /* Log + side */
-.cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
-.stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
-.stack > .panel { min-width: 0; }
-.log-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font-size: 13px; color: var(--muted); }
-.log-tools [hidden] { display: none; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { padding: 10px 12px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
-th { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-th:first-child, td:first-child { text-align: left; padding-left: 18px; color: var(--muted); }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+.stack { display: grid; gap: 20px; align-content: start; min-width: 0; }
+.stack > .panel { min-width: 0; overflow: hidden; }
+.log-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font-size: 14px; color: var(--smoke); }
+.table-wrap { position: relative; overflow-x: auto; }
+th:first-child, td:first-child { text-align: left; padding-left: 20px; color: var(--smoke); }
 th.l, td.l { text-align: left; }
-td { font-family: var(--font-mono); font-size: 14px; }
-td.cut { color: var(--accent); }
-td.dim { color: var(--muted); }
-td.rm { width: 44px; padding: 4px 10px 4px 0; }
-tbody tr:hover { background: #1a1d22; }
-tfoot td { border-bottom: 0; color: var(--text); font-weight: 500; }
-tfoot td:first-child { color: var(--text); font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.06em; }
-.type-pill {
-  display: inline-block; padding: 1px 7px; border: 1px solid var(--line); border-radius: 2px;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text);
-}
-.chip {
-  display: inline-block; margin-left: 8px; padding: 1px 6px;
-  border: 1px solid rgba(76, 195, 138, 0.45); border-radius: 2px;
-  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--good); vertical-align: 1px;
-}
-.chip.pay { border-color: var(--line); color: var(--muted); }
-.chip.best { border-color: rgba(240, 180, 41, 0.45); color: var(--accent); }
+td.cut { color: var(--sodium); font-weight: 600; }
+td.dim { color: var(--smoke); }
+td.rm { width: 48px; padding: 4px 12px 4px 0; }
+tfoot td { border-bottom: 0; font-weight: 600; }
+tfoot td:first-child { color: var(--receipt); }
+.type-pill { display: inline-block; padding: 2px 10px; border-radius: 99px; background: var(--pier-3); font-size: 13.5px; font-weight: 500; color: var(--receipt); }
+.chip { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 99px; background: var(--cash-soft); font-size: 12px; font-weight: 600; color: var(--cash); vertical-align: 1px; }
+.chip.pay { background: var(--pier-3); color: var(--smoke); }
+.chip.best { background: var(--sodium-soft); color: var(--sodium); }
 .x {
-  width: 30px; height: 30px; border: 1px solid transparent; border-radius: 3px;
-  background: transparent; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer;
+  width: 32px; height: 32px; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--smoke); font-size: 19px; line-height: 1; cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease;
 }
-.x:hover { border-color: var(--line); color: var(--bad); }
-.empty-log { margin: 0; padding: 22px 18px; color: var(--muted); }
-.empty-log[hidden], .panel[hidden] { display: none; }
+.x:hover { border-color: var(--rope); color: var(--siren); background: var(--siren-soft); }
+.empty-log { margin: 0; padding: 24px 20px; color: var(--smoke); }
 
-.settings { display: grid; gap: 16px; padding: 18px; }
+.settings { display: grid; gap: 16px; padding: 20px; position: sticky; top: calc(var(--nav-h) + 74px); }
 .settings .hint:empty { display: none; }
-.settings .row { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
-.copy-msg { font-size: 13px; color: var(--muted); }
+.settings .row { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 16px; border-top: 1px solid var(--rope); }
+.copy-msg { font-size: 14px; color: var(--smoke); }
 .copy-msg:empty { display: none; }
-#copyFallback { width: 100%; min-height: 110px; background: var(--field); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 10px; font-family: var(--font-mono); font-size: 13px; }
-#copyFallback[hidden] { display: none; }
-.note { margin: 0; font-size: 13px; color: var(--muted); }
+#copyFallback { width: 100%; min-height: 120px; height: auto; padding: 12px; font-size: 14px; line-height: 1.5; }
+.note { margin: 0; font-size: 14px; color: var(--smoke); }
 
-@media (max-width: 980px) {
-  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .stat.main { grid-column: 1 / -1; border-bottom: 1px solid var(--line); }
-  .stats > .stat:nth-child(2) { border-left: 0; }
-}
-@media (max-width: 860px) {
+@media (max-width: 900px) {
   .cols { grid-template-columns: minmax(0, 1fr); }
+  .settings { position: static; }
 }
 @media (max-width: 640px) {
+  .addbar { padding: 16px; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { padding: 16px; }
+  .stat.main { padding: 20px 16px 16px; }
   .stats > .stat:nth-child(4) { border-left: 0; }
-  .stats > .stat:nth-child(2), .stats > .stat:nth-child(3) { border-bottom: 1px solid var(--line); }
+  .stats > .stat:nth-child(2), .stats > .stat:nth-child(3) { border-bottom: 1px solid var(--rope); }
+  .val { font-size: 28px; }
   .goal-row .stat { flex: 1 1 30%; }
-  .goal-row .progress { flex: 1 1 100%; padding-left: 18px; }
-  .big { font-size: 40px; }
+  .goal-row .progress { flex: 1 1 100%; padding-left: 16px; padding-right: 16px; }
   .addbar .btn.primary { flex: 1 1 100%; }
   .each-wrap { flex: 1 1 120px; }
   .extra-row .field { max-width: none; }
@@ -145,17 +117,18 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
 </style>
 </head>
 <body>
-<nav class="nav" aria-label="Main">
+<header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
-    <div class="nav-links">
-      <a href="./" aria-current="page">Split</a>
-      <a href="../upgrades/">Unlocks</a>
-      <a href="../items/">Prices</a>
-      <a href="../faq/">FAQ</a>
-    </div>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#f4b740"/><rect x="6.5" y="10" width="19" height="12" rx="2.5" fill="none" stroke="#1f1705" stroke-width="2.2"/><circle cx="16" cy="16" r="2.7" fill="#1f1705"/><path d="M10.4 13.4v5.2M21.6 13.4v5.2" stroke="#1f1705" stroke-width="2" stroke-linecap="round"/></svg><b>ROB RUN</b><small>Tools</small></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
+      <a href="../split/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
+      <a href="../upgrades/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5.5" cy="19" r="2.2"/><circle cx="18.5" cy="19" r="2.2"/><path d="M12 7.2V12M12 12H5.5v4.8M12 12h6.5v4.8"/></svg><span>Unlocks</span></a>
+      <a href="../items/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.6V4.5h8.1l8.9 8.9-8 8z"/><circle cx="8.2" cy="9.2" r="1.6"/></svg><span>Prices</span></a>
+      <a href="../faq/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.6a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6"/><path d="M12 17.1v.2"/></svg><span>FAQ</span></a>
+    </nav>
   </div>
-</nav>
+</header>
 
 <main class="page">
   <header class="page-head">
@@ -163,12 +136,21 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     <p class="sub">Put in what the crew made on a run. It splits it, keeps a running total of your cut, and shows your averages for the wipe.</p>
   </header>
 
-  <section class="panel addbar" aria-label="Add a run">
+  <nav class="jump" aria-label="On this page">
+    <a href="#add">Add a run</a>
+    <a href="#totals">Your totals</a>
+    <a href="#log">Run log</a>
+    <a href="#best">What pays best</a>
+    <a href="#wipes">Past wipes</a>
+    <a href="#settings">Goal and settings</a>
+  </nav>
+
+  <section class="panel addbar" id="add" data-spy aria-label="Add a run">
     <form id="addForm" novalidate>
       <div class="add-row">
         <div class="field grow">
           <label for="take">Run take</label>
-          <input type="text" id="take" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 280k">
+          <input type="text" id="take" data-slash inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 280k">
         </div>
         <div class="field">
           <span class="label" id="crewLabel">Split</span>
@@ -199,13 +181,13 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     <p class="hint" id="takeMsg">Works with 280k, 1.2m or 280,000. Press Enter to add.</p>
   </section>
 
-  <section class="panel stats" aria-label="Your totals">
+  <section class="panel stats" id="totals" data-spy aria-label="Your totals">
     <div class="stat main">
-      <div class="stat-top"><span class="label">Your cut</span><span class="tag" id="status">No runs</span></div>
-      <span class="big" id="total" aria-live="polite">0</span>
+      <div class="stat-top"><span class="label">Your cut this wipe</span><span class="tag" id="status">No runs</span></div>
+      <span class="big"><span class="cur">$</span><span id="total" aria-live="polite">0</span></span>
     </div>
     <div class="stat"><span class="label">Runs</span><span class="val" id="runCount">0</span></div>
-    <div class="stat"><span class="label">Avg cut / run</span><span class="val" id="avgCut">–</span></div>
+    <div class="stat"><span class="label">Average cut</span><span class="val" id="avgCut">–</span></div>
     <div class="stat"><span class="label">Best run</span><span class="val" id="bestRun">–</span></div>
     <div class="stat"><span class="label">Per hour</span><span class="val" id="perHour">–</span></div>
     <div class="goal-row">
@@ -226,7 +208,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
 
   <div class="cols">
     <div class="stack">
-      <section class="panel" aria-labelledby="logTitle">
+      <section class="panel" id="log" data-spy aria-labelledby="logTitle">
         <div class="panel-head">
           <h2 class="panel-title" id="logTitle">Runs this wipe</h2>
           <div class="log-tools">
@@ -237,7 +219,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
         <div class="table-wrap">
           <table id="logTable">
             <thead>
-              <tr><th scope="col">#</th><th scope="col" class="l">Time</th><th scope="col" class="l">Hit</th><th scope="col">Take</th><th scope="col">Costs</th><th scope="col">Split</th><th scope="col">Your cut</th><th scope="col">Total</th><th scope="col"><span style="position:absolute;left:-9999px">Remove</span></th></tr>
+              <tr><th scope="col">#</th><th scope="col" class="l">Time</th><th scope="col" class="l">Hit</th><th scope="col">Take</th><th scope="col">Costs</th><th scope="col">Split</th><th scope="col">Your cut</th><th scope="col">Total</th><th scope="col"><span class="sr-only">Remove</span></th></tr>
             </thead>
             <tbody id="logBody"></tbody>
             <tfoot id="logFoot"></tfoot>
@@ -246,7 +228,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
         <p id="emptyLog" class="empty-log" hidden>No runs yet. Add one above.</p>
       </section>
 
-      <section class="panel" id="typePanel" aria-labelledby="typeTitle" hidden>
+      <section class="panel" id="best" data-spy aria-labelledby="typeTitle" hidden>
         <div class="panel-head"><h2 class="panel-title" id="typeTitle">What pays best</h2></div>
         <div class="table-wrap">
           <table>
@@ -256,7 +238,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
         </div>
       </section>
 
-      <section class="panel" id="wipePanel" aria-labelledby="wipeTitle" hidden>
+      <section class="panel" id="wipes" data-spy aria-labelledby="wipeTitle" hidden>
         <div class="panel-head"><h2 class="panel-title" id="wipeTitle">Past wipes</h2></div>
         <div class="table-wrap">
           <table>
@@ -267,8 +249,8 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       </section>
     </div>
 
-    <aside class="panel settings" aria-labelledby="goalTitle">
-      <h2 class="panel-title" id="goalTitle">Goal</h2>
+    <aside class="panel settings" id="settings" data-spy aria-labelledby="goalTitle">
+      <h2 class="panel-title" id="goalTitle">Goal and settings</h2>
       <div class="field">
         <label for="goal">Your goal</label>
         <input type="text" id="goal" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="1m">
@@ -291,15 +273,15 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
       </div>
       <span id="copyMsg" class="copy-msg" role="status"></span>
       <textarea id="copyFallback" readonly hidden aria-label="Summary to copy"></textarea>
-      <p class="note">New wipe saves this wipe's totals under Past wipes and starts fresh. Servers wipe every 7 days.</p>
+      <p class="note">New wipe saves this wipe's totals under Past wipes and starts fresh. Each server wipes 7 days after it opened. Your runs are saved on this device only.</p>
     </aside>
   </div>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
-    <span>Your runs are saved on this device only.</span>
-    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
+    <p>Your runs are saved on this device only.</p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="../faq/#sources">Sources</a></p>
   </div>
 </footer>
 
@@ -423,7 +405,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
   }
 
   var state = load();
-  var lastRemoved = null, armTimers = {};
+  var lastRemoved = null, armTimers = {}, shownTotal = 0, flashLast = false;
   var $ = function (id) { return document.getElementById(id); };
   var el = {
     take: $("take"), costs: $("costs"), type: $("type"), typeList: $("typeList"), takeMsg: $("takeMsg"), addForm: $("addForm"),
@@ -433,7 +415,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     fill: $("fill"), bar: $("bar"), payMark: $("payMark"), goalMark: $("goalMark"), payLabel: $("payLabel"), goalLabel: $("goalLabel"),
     exampleNote: $("exampleNote"), startEmpty: $("startEmpty"), undoWrap: $("undoWrap"), undoNum: $("undoNum"), undoBtn: $("undoBtn"),
     logTable: $("logTable"), logBody: $("logBody"), logFoot: $("logFoot"), emptyLog: $("emptyLog"),
-    typePanel: $("typePanel"), typeBody: $("typeBody"), wipePanel: $("wipePanel"), wipeBody: $("wipeBody"),
+    typePanel: $("best"), typeBody: $("typeBody"), wipePanel: $("wipes"), wipeBody: $("wipeBody"),
     goal: $("goal"), goalHint: $("goalHint"), pay: $("pay"), payHint: $("payHint"), fee: $("fee"), feeHint: $("feeHint"),
     copyBtn: $("copyBtn"), wipeBtn: $("wipeBtn"), clearBtn: $("clearBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback")
   };
@@ -454,7 +436,9 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
   function render() {
     var c = compute(state);
 
-    el.total.textContent = fmt.format(c.total);
+    if (window.RR) RR.countUp(el.total, c.total, { from: shownTotal, format: function (v) { return fmt.format(Math.round(v)); } });
+    else el.total.textContent = fmt.format(c.total);
+    shownTotal = c.total;
     var pctGoal = state.goal > 0 ? Math.min(100, (c.total / state.goal) * 100) : 0;
     if (!c.n) { el.status.textContent = "No runs"; el.status.className = "tag"; }
     else if (c.total >= state.goal) { el.status.textContent = "Goal hit"; el.status.className = "tag good"; }
@@ -520,6 +504,7 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
         '<td class="rm"><button type="button" class="x" data-id="' + row.run.id + '" aria-label="Remove run ' + (i + 1) + '">×</button></td>';
       el.logBody.appendChild(tr);
     });
+    if (flashLast && window.RR) { RR.flash(el.logBody.lastElementChild); flashLast = false; }
     var costsTotal = state.runs.reduce(function (s, r) { return s + (r.costs || 0); }, 0);
     el.logFoot.innerHTML = c.n
       ? "<tr><td>Total</td><td></td><td></td><td>" + fmt.format(c.crewTake) + '</td><td class="dim">' + (costsTotal ? "−" + fmt.format(costsTotal) : "–") + '</td><td></td><td class="cut">' + fmt.format(c.total) + "</td><td></td><td></td></tr>"
@@ -618,7 +603,9 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     lastRemoved = null;
     el.take.value = ""; el.costs.value = "";
     resetTakeMsg();
+    flashLast = true;
     save(); render();
+    if (window.RR) RR.toast("Run added. Your cut: $" + fmt.format(cutOf(state.runs[state.runs.length - 1], state.fee)));
     el.take.focus();
   });
 
@@ -690,8 +677,8 @@ tfoot td:first-child { color: var(--text); font-family: var(--font-display); tex
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(function () {
-          el.copyMsg.textContent = "Copied. Paste it in Discord.";
-          setTimeout(function () { el.copyMsg.textContent = ""; }, 3000);
+          el.copyMsg.textContent = "";
+          if (window.RR) RR.toast("Copied. Paste it in Discord."); else el.copyMsg.textContent = "Copied. Paste it in Discord.";
         }, fallback);
       } else { fallback(); }
     } catch (e) { fallback(); }

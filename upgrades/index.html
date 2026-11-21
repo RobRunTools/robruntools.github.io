@@ -7,164 +7,183 @@
 <meta name="description" content="Larry's Shipments tree for ROB RUN, laid out like the game. Pick what you want and see the unlock cost, Black Market price and everything you need first.">
 <meta property="og:title" content="ROB RUN Unlock Tree">
 <meta property="og:description" content="All 172 shipments laid out like the game. Pick what you want and see what it costs to unlock and buy.">
-<meta name="theme-color" content="#0d0e11">
+<meta name="theme-color" content="#162027">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
 <style>
-:root { --t1: #4cc38a; --t2: #a57cf0; --t3: #f0b429; --tany: #8c929c; --jail: #ef9b6b; }
+:root { --t1: #7ccb9d; --t2: #a98cf2; --t3: #f4b740; --tany: #8d9aa0; --jail: #f0946a; }
 .page { max-width: 1440px; }
 .nav-in, .foot-in { max-width: 1440px; }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
 .layout > * { min-width: 0; }
+.treebox { overflow: hidden; }
 
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); position: relative; }
-.toolbar .search { flex: 1 1 220px; position: relative; }
-.toolbar input[type="search"] { height: 38px; font-size: 14px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
-.seg button {
-  height: 36px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-}
-.seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--field); color: var(--accent); }
-.toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; }
-.toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--rope); position: relative; }
+.toolbar .search { flex: 1 1 240px; position: relative; }
+.toolbar .search svg { position: absolute; left: 13px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--smoke); pointer-events: none; }
+.toolbar input[type="search"] { height: 42px; font-size: 15px; padding-left: 40px; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 500; color: var(--smoke); cursor: pointer; }
+.toggle input { width: 17px; height: 17px; }
 .hits {
-  position: absolute; z-index: 15; left: 0; right: 0; top: 42px; max-height: 320px; overflow: auto;
-  list-style: none; margin: 0; padding: 4px 0; border: 1px solid var(--line); border-radius: 4px; background: #121418;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  position: absolute; z-index: 15; left: 0; right: 0; top: 48px; max-height: 340px; overflow: auto;
+  list-style: none; margin: 0; padding: 6px; border: 1px solid var(--rope); border-radius: var(--r-md); background: var(--pier-2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); animation: rise 200ms var(--ease);
 }
-.hits button { width: 100%; display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit; font-size: 14px; }
-.hits button:hover, .hits button:focus-visible { background: #1d2026; }
-.hits .b { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+.hits button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 10px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--receipt); text-align: left; cursor: pointer; font: inherit; font-size: 15px; }
+.hits button:hover, .hits button:focus-visible { background: var(--pier-3); }
+.hits .b { display: flex; gap: 10px; color: var(--smoke); font-size: 13px; white-space: nowrap; }
+.hits .b b { color: var(--receipt); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hits .empty { padding: 10px; }
 
-.branches { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.branches { display: flex; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--rope); overflow-x: auto; scrollbar-width: none; }
 .branches::-webkit-scrollbar { display: none; }
 .chipbtn {
-  flex: none; height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px;
-  background: transparent; color: var(--muted); cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  flex: none; display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px; border: 1px solid var(--rope); border-radius: 99px;
+  background: transparent; color: var(--smoke); cursor: pointer; font: 500 14.5px/1 var(--font-body);
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
-.chipbtn:hover { color: var(--text); border-color: var(--muted); }
-.chipbtn[aria-pressed="true"] { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); }
-.chipbtn .n { color: var(--muted); margin-left: 4px; }
+.chipbtn:hover { color: var(--receipt); border-color: var(--smoke); }
+.chipbtn[aria-pressed="true"] { color: var(--sodium); border-color: transparent; background: var(--sodium-soft); }
+.chipbtn .n { font-size: 12.5px; color: var(--smoke); }
 
 /* ---------- Game-style stage ---------- */
 .stage {
-  position: relative; height: clamp(420px, calc(100vh - 340px), 860px); overflow: hidden; cursor: grab; touch-action: none; user-select: none;
+  position: relative; height: clamp(440px, calc(100vh - 300px), 880px); overflow: hidden; cursor: grab; touch-action: none; user-select: none;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.05), transparent 65%),
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0) 0 0 / 24px 24px,
-    #1a1b1e;
+    radial-gradient(ellipse at 50% 45%, rgba(244, 183, 64, 0.05), transparent 60%),
+    radial-gradient(circle at 1px 1px, rgba(237, 232, 221, 0.06) 1px, transparent 0) 0 0 / 26px 26px,
+    #17222a;
 }
 .stage.dragging { cursor: grabbing; }
 .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+.world.glide { transition: transform 420ms var(--ease); }
 .world > svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
-.world > svg path { fill: none; stroke: #5b6068; stroke-width: 2; }
-.world > svg path.trunk { stroke: #c9ccd2; stroke-width: 3; }
-.world > svg path.hot { stroke: var(--accent); stroke-width: 3; }
-.world > svg path.sel { stroke: #ffffff; stroke-width: 3; }
-.world > svg path.done { stroke: rgba(76, 195, 138, 0.75); }
+.world > svg path { fill: none; stroke: #4a5d68; stroke-width: 2; }
+.world > svg path.trunk { stroke: #c4ccce; stroke-width: 3; }
+.world > svg path.hot { stroke: var(--sodium); stroke-width: 3; }
+.world > svg path.sel { stroke: var(--receipt); stroke-width: 3; }
+.world > svg path.done { stroke: rgba(124, 203, 157, 0.8); }
 
 .tile {
-  position: absolute; display: block; width: 84px; height: 84px; padding: 0; border: 1px solid #3a3e46; border-radius: 3px;
-  background: linear-gradient(180deg, #2a2d33, #212328); color: #d9dbe0; cursor: pointer; font: inherit;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  position: absolute; display: block; width: 96px; height: 102px; padding: 0; border: 1px solid #3c4f5a; border-radius: 8px;
+  background: linear-gradient(180deg, #2a3943, #212e36); color: #dfe3df; cursor: pointer; font: inherit;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
+  transition: border-color 140ms ease, box-shadow 160ms ease, transform 160ms var(--ease);
 }
-.tile svg.ic { position: absolute; top: 14px; left: 50%; width: 30px; height: 30px; margin-left: -15px; stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.tile .tn { position: absolute; left: 3px; right: 3px; bottom: 6px; font-size: 10.5px; line-height: 1.15; text-align: center; color: #b9bcc3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.tile::after { content: ""; position: absolute; left: -1px; right: -1px; bottom: -5px; height: 4px; border-radius: 0 0 2px 2px; background: var(--tc, var(--tany)); }
-.tile .tr { position: absolute; top: 3px; left: 4px; font-family: var(--font-mono); font-size: 9px; color: var(--tc, var(--tany)); }
-.tile .jb { position: absolute; top: -9px; right: -6px; padding: 0 4px; border-radius: 2px; background: #2b1a12; border: 1px solid var(--jail); color: var(--jail); font-family: var(--font-mono); font-size: 10px; line-height: 15px; }
-.tile:hover { border-color: #8c929c; color: #fff; }
+.tile svg.ic { position: absolute; top: 12px; left: 50%; width: 30px; height: 30px; margin-left: -15px; stroke: currentColor; stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.tile .tn { position: absolute; left: 5px; right: 5px; top: 48px; font-size: 11px; font-weight: 600; line-height: 1.15; text-align: center; color: #cfd4d1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.tile .tp { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1; color: var(--sodium); font-variant-numeric: tabular-nums; }
+.tile::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -5px; height: 4px; border-radius: 0 0 4px 4px; background: var(--tc, var(--tany)); }
+.tile .tr { position: absolute; top: 5px; left: 7px; font-size: 10.5px; font-weight: 700; color: var(--tc, var(--tany)); }
+.tile .jb { position: absolute; top: -9px; right: -7px; padding: 0 5px; border-radius: 99px; background: #3a2418; border: 1px solid var(--jail); color: var(--jail); font-size: 10.5px; font-weight: 700; line-height: 16px; }
+.tile:hover { border-color: #8d9aa0; color: #fff; transform: translateY(-2px); }
 .tile:hover .tn { color: #fff; }
 .tile.owned { opacity: 0.5; }
-.tile.owned .tr::after { content: " ✓"; color: var(--good); }
-.tile.need { border-color: rgba(240, 180, 41, 0.75); background: linear-gradient(180deg, #3a3220, #27231a); }
-.tile.target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 2px 0 rgba(0,0,0,0.4); }
-.tile.sel { border-color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 18px rgba(255, 255, 255, 0.25); color: #fff; }
-.tile.dim { opacity: 0.18; }
+.tile.owned .tp { color: var(--cash); }
+.tile.owned .tr::after { content: " \2713"; color: var(--cash); }
+.tile.need { border-color: rgba(244, 183, 64, 0.8); background: linear-gradient(180deg, #3c3624, #2a2a20); }
+.tile.target { border-color: var(--sodium); box-shadow: 0 0 0 2px var(--sodium), 0 3px 0 rgba(0, 0, 0, 0.35); }
+.tile.sel { border-color: var(--receipt); box-shadow: 0 0 0 2px var(--receipt), 0 0 22px rgba(237, 232, 221, 0.25); color: #fff; }
+.tile.dim { opacity: 0.16; }
 .t-any { --tc: var(--tany); } .t-1 { --tc: var(--t1); } .t-2 { --tc: var(--t2); } .t-3 { --tc: var(--t3); }
 
 .polaroid {
-  position: absolute; display: block; padding: 7px 7px 0; border-radius: 2px; background: #ecebe6; color: #1b1c1f; text-align: center;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55); cursor: pointer; border: 0; font: inherit;
+  position: absolute; display: block; padding: 7px 7px 0; border-radius: 3px; background: #efebe1; color: #1b1c1f; text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); cursor: pointer; border: 0; font: inherit;
+  transition: transform 220ms var(--ease);
 }
-.polaroid .ph { display: flex; align-items: center; justify-content: center; height: 88px; background: linear-gradient(160deg, #50555e, #2c2f35); color: #e9eaee; }
+.polaroid .ph { display: flex; align-items: center; justify-content: center; height: 88px; background: linear-gradient(160deg, #3f525d, #22303a); color: #eef0ea; }
 .polaroid .ph svg { width: 46px; height: 46px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.polaroid .cap { display: block; padding: 7px 0 0; font-family: "Permanent Marker", var(--font-display); font-size: 12px; line-height: 1.2; white-space: nowrap; text-transform: uppercase; }
+.polaroid .cap { display: block; padding: 7px 0 0; font-family: "Permanent Marker", var(--font-display); font-size: 13px; line-height: 1.2; white-space: nowrap; text-transform: uppercase; }
 .polaroid.cat { width: 120px; height: 128px; }
-.polaroid.cat:hover { transform: rotate(-1.5deg); }
+.polaroid.cat:hover { transform: rotate(-2deg) translateY(-2px); }
 .polaroid.larry { width: 158px; height: 196px; transform: rotate(-2deg); cursor: default; }
-.polaroid.larry .ph { height: 150px; }
-.polaroid.larry .ph { background: radial-gradient(circle at 50% 40%, #6b4a3a, #2a1e18 75%); }
+.polaroid.larry .ph { height: 150px; background: radial-gradient(circle at 50% 40%, #6b4a3a, #2a1e18 75%); }
 .polaroid.larry .ph svg { width: 92px; height: 92px; stroke: #f2d9c4; }
-.polaroid.larry .cap { font-size: 15px; color: #a3261f; }
-.polaroid.larry .note { position: absolute; left: 50%; bottom: -32px; transform: translateX(-50%) rotate(2deg); width: 170px; padding: 4px 8px; background: #d9d6cc; color: #2c2b28; font-size: 10px; line-height: 1.3; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.4); }
+.polaroid.larry .cap { font-size: 16px; color: #a3261f; }
+.polaroid.larry .note { position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%) rotate(2deg); width: 176px; padding: 5px 9px; background: #dcd7ca; color: #2c2b28; font-size: 10.5px; line-height: 1.3; text-align: center; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); }
 
-.stage-ui { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 6px; z-index: 5; }
+.stage-ui { position: absolute; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 6px; z-index: 5; }
 .stage-ui button {
-  width: 34px; height: 34px; border: 1px solid #3a3e46; border-radius: 4px; background: rgba(18, 20, 24, 0.9); color: var(--text);
-  font-family: var(--font-mono); font-size: 15px; cursor: pointer;
+  min-width: 38px; height: 38px; padding: 0 10px; border: 1px solid var(--rope); border-radius: var(--r-md); background: rgba(29, 41, 48, 0.94); color: var(--receipt);
+  font: 600 14px/1 var(--font-body); cursor: pointer; transition: border-color 140ms ease, color 140ms ease;
 }
-.stage-ui button.wide { width: auto; padding: 0 10px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
-.stage-ui button:hover { border-color: var(--accent); color: var(--accent); }
-.stage-hint { position: absolute; left: 12px; bottom: 12px; z-index: 5; font-family: var(--font-mono); font-size: 11px; color: #8c929c; background: rgba(18, 20, 24, 0.8); padding: 4px 8px; border-radius: 3px; }
-.zoom-ind { font-family: var(--font-mono); font-size: 11px; color: #8c929c; align-self: center; padding: 4px 6px; border-radius: 3px; background: rgba(18, 20, 24, 0.85); }
+.stage-ui button.ico { font-size: 19px; padding: 0; }
+.stage-ui button:hover { border-color: var(--sodium); color: var(--sodium); }
+.stage-hint { position: absolute; left: 12px; bottom: 12px; z-index: 5; font-size: 13px; color: var(--smoke); background: rgba(29, 41, 48, 0.9); padding: 6px 10px; border-radius: var(--r-sm); }
+.zoom-ind { min-width: 46px; text-align: center; font-size: 13px; font-weight: 600; color: var(--smoke); padding: 8px 6px; border-radius: var(--r-sm); background: rgba(29, 41, 48, 0.9); font-variant-numeric: tabular-nums; }
 
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
-.legend span::before { content: ""; display: inline-block; width: 12px; height: 4px; margin-right: 6px; border-radius: 1px; background: var(--tc); vertical-align: 3px; }
-.legend .lj::before { width: 10px; height: 10px; border: 1px solid var(--jail); background: transparent; vertical-align: -1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 12px 16px; border-top: 1px solid var(--rope); font-size: 13.5px; color: var(--smoke); }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 5px; margin-right: 7px; border-radius: 3px; background: var(--tc); vertical-align: 3px; }
+.legend .lj::before { width: 11px; height: 11px; border-radius: 99px; border: 1px solid var(--jail); background: #3a2418; vertical-align: -1px; }
+.legend .lp::before { width: 11px; height: 11px; border-radius: 3px; border: 2px solid var(--sodium); background: transparent; vertical-align: -1px; }
 
 /* List view */
 .list { list-style: none; margin: 0; padding: 4px 0; max-height: 72vh; overflow: auto; }
 .list li button {
-  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
-  padding: 10px 14px 10px calc(14px + var(--d, 0) * 18px); border: 0; border-bottom: 1px solid var(--line);
-  background: transparent; color: var(--text); text-align: left; cursor: pointer; font: inherit;
+  width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 11px 16px 11px calc(16px + var(--d, 0) * 18px); border: 0; border-bottom: 1px solid var(--rope);
+  background: transparent; color: var(--receipt); text-align: left; cursor: pointer; font: inherit;
+  transition: background-color 140ms ease;
 }
-.list li button:hover { background: #1a1d22; }
-.list .tb { min-width: 30px; text-align: center; border: 1px solid var(--tc, var(--line)); border-radius: 2px; font-family: var(--font-mono); font-size: 10px; color: var(--tc, var(--muted)); }
-.list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.list .cs { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
-.list li.owned .nm { color: var(--muted); text-decoration: line-through; }
-.list li.need .tb { background: rgba(240, 180, 41, 0.12); }
-.list li.sel button { background: #1e1b13; }
-.empty { padding: 22px 14px; margin: 0; color: var(--muted); }
+.list li button:hover { background: rgba(255, 255, 255, 0.03); }
+.list .tb { min-width: 34px; height: 22px; display: grid; place-items: center; border-radius: 99px; background: rgba(255, 255, 255, 0.05); font-size: 12px; font-weight: 700; color: var(--tc, var(--smoke)); }
+.list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.list .cs { font-size: 14px; font-weight: 600; color: var(--smoke); font-variant-numeric: tabular-nums; }
+.list li.owned .nm { color: var(--smoke); text-decoration: line-through; }
+.list li.need .tb { background: var(--sodium-soft); }
+.list li.sel button { background: rgba(244, 183, 64, 0.08); }
+.empty { padding: 24px 16px; margin: 0; color: var(--smoke); }
 
 /* Side */
-.side { display: grid; gap: 16px; position: sticky; top: 72px; }
-.card { padding: 16px; display: grid; gap: 12px; }
-.card h2.title { font-family: var(--font-display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1.1; }
-.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-.fact { display: grid; gap: 2px; }
-.fact .v { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
-.fact .v.big { font-size: 20px; color: var(--accent); }
+.side { display: grid; gap: 20px; position: sticky; top: calc(var(--nav-h) + 74px); }
+.card { padding: 20px; display: grid; gap: 14px; }
+.card.changed { animation: rise 300ms var(--ease); }
+.card h2.title { font-family: var(--font-display); font-weight: 800; font-size: 38px; line-height: 0.95; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.fact { display: grid; gap: 3px; }
+.fact .v { font-family: var(--font-display); font-weight: 700; font-size: 25px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.fact .v small { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--smoke); }
+.fact .v.big { font-size: 44px; color: var(--sodium); font-weight: 800; }
 .fact.wide { grid-column: 1 / -1; }
-.chain { font-size: 13px; color: var(--muted); line-height: 1.6; }
-.chain b { color: var(--text); font-weight: 500; }
+.chain { font-size: 14.5px; color: var(--smoke); line-height: 1.6; }
+.chain b { color: var(--receipt); font-weight: 600; }
 .chain a { cursor: pointer; }
+.chain .owned { color: var(--cash); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.plan-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
-.plan-list li button.go { background: none; border: 0; padding: 0; color: var(--text); font: inherit; cursor: pointer; text-align: left; }
-.plan-list li button.go:hover { color: var(--accent); }
-.plan-list .x { width: 26px; height: 26px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: var(--muted); cursor: pointer; font-size: 16px; }
-.plan-list .x:hover { color: var(--bad); border-color: var(--line); }
-.sum { display: grid; gap: 7px; padding-top: 12px; border-top: 1px solid var(--line); }
-.sum-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
-.sum-row .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.sum-row.total { padding-top: 8px; border-top: 1px solid var(--line); align-items: baseline; }
-.sum-row.total .v { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--accent); }
-.runs { margin: 0; font-size: 14px; color: var(--muted); }
-.runs strong { color: var(--text); font-weight: 500; }
-.src { margin: 0; font-size: 12px; color: var(--muted); }
-.copy-msg { font-size: 13px; color: var(--muted); }
+.plan-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.plan-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 15px; }
+.plan-list li button.go { background: none; border: 0; padding: 0; color: var(--receipt); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.plan-list li button.go span { font-weight: 400; color: var(--smoke); font-size: 13px; margin-left: 4px; }
+.plan-list li button.go:hover { color: var(--sodium); }
+.plan-list .x { width: 30px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: var(--smoke); cursor: pointer; font-size: 18px; }
+.plan-list .x:hover { color: var(--siren); background: var(--siren-soft); }
+.sum { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--rope); }
+.sum-row { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.sum-row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+.sum-row.total { padding-top: 10px; border-top: 1px solid var(--rope); align-items: flex-end; }
+.sum-row.total .v { font-family: var(--font-display); font-weight: 800; font-size: 46px; line-height: 0.9; color: var(--sodium); }
+.runs { margin: 0; font-size: 14.5px; color: var(--smoke); }
+.runs strong { color: var(--receipt); font-weight: 600; }
+.src { margin: 0; font-size: 13px; color: var(--smoke); }
+.copy-msg { font-size: 14px; color: var(--smoke); }
 .copy-msg:empty { display: none; }
 
+.selbar { display: none; }
+@media (max-width: 1100px) {
+  .selbar {
+    position: absolute; left: 12px; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 10px;
+    padding: 8px 8px 8px 14px; border: 1px solid var(--rope); border-radius: var(--r-md); background: rgba(29, 41, 48, 0.95);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+  }
+  .selbar:empty { display: none; }
+  .selbar .sb-n { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .selbar .sb-p { flex: 1; color: var(--smoke); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 @media (max-width: 1100px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
@@ -172,44 +191,54 @@
 @media (max-width: 640px) {
   .stage { height: 64vh; min-height: 380px; max-height: none; }
   .stage-hint { display: none; }
+  .stage-ui { left: 12px; justify-content: flex-end; flex-wrap: wrap; }
+  .card h2.title { font-size: 34px; }
 }
 </style>
 </head>
 <body>
-<nav class="nav" aria-label="Main">
+<header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
-    <div class="nav-links">
-      <a href="../split/">Split</a>
-      <a href="./" aria-current="page">Unlocks</a>
-      <a href="../items/">Prices</a>
-      <a href="../faq/">FAQ</a>
-    </div>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#f4b740"/><rect x="6.5" y="10" width="19" height="12" rx="2.5" fill="none" stroke="#1f1705" stroke-width="2.2"/><circle cx="16" cy="16" r="2.7" fill="#1f1705"/><path d="M10.4 13.4v5.2M21.6 13.4v5.2" stroke="#1f1705" stroke-width="2" stroke-linecap="round"/></svg><b>ROB RUN</b><small>Tools</small></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
+      <a href="../split/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
+      <a href="../upgrades/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5.5" cy="19" r="2.2"/><circle cx="18.5" cy="19" r="2.2"/><path d="M12 7.2V12M12 12H5.5v4.8M12 12h6.5v4.8"/></svg><span>Unlocks</span></a>
+      <a href="../items/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.6V4.5h8.1l8.9 8.9-8 8z"/><circle cx="8.2" cy="9.2" r="1.6"/></svg><span>Prices</span></a>
+      <a href="../faq/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.6a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6"/><path d="M12 17.1v.2"/></svg><span>FAQ</span></a>
+    </nav>
   </div>
-</nav>
+</header>
 
 <main class="page">
   <header class="page-head">
     <h1>Unlock tree</h1>
-    <p class="sub">Larry's Shipments, laid out like the game. Click anything to see what it costs to unlock, what it costs to buy, and everything you need before it.</p>
+    <p class="sub">Larry's Shipments, laid out like the game. Click anything to see what it costs to unlock, what it costs to buy, and everything you need before it. Unlocks reset at every wipe.</p>
   </header>
+
+  <nav class="jump" aria-label="On this page">
+    <a href="#tree">The tree</a>
+    <a href="#detail">Selected item</a>
+    <a href="#plan">Your plan</a>
+  </nav>
   <div id="app"><p class="empty">Loading the tree...</p></div>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
-    <span>Numbers can change with patches, and unlocks reset at every wipe. Double-check in game (H) before you save up.</span>
-    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
+    <p>Your plan and what you own are saved on this device only.</p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="../faq/#sources">Sources</a></p>
   </div>
 </footer>
 
 <template id="appTpl">
   <div class="layout">
-    <section class="panel" aria-label="Shipments tree">
+    <section class="panel treebox" id="tree" data-spy aria-label="Shipments tree">
       <div class="toolbar">
         <div class="search">
-          <label for="q" style="position:absolute;left:-9999px">Find a shipment</label>
-          <input type="search" id="q" placeholder="Find a shipment, e.g. Longhorn" autocomplete="off" spellcheck="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+          <label for="q" class="sr-only">Find a shipment</label>
+          <input type="search" id="q" placeholder="Find a shipment, like Longhorn" autocomplete="off" spellcheck="false" data-slash>
           <ul class="hits" id="hits" hidden></ul>
         </div>
         <div class="seg" role="group" aria-label="View">
@@ -222,16 +251,16 @@
       <div id="view"></div>
       <div class="legend">
         <span class="t-any">Any tier</span><span class="t-1">Tier I</span><span class="t-2">Tier II</span><span class="t-3">Tier III</span>
-        <span class="lj">Needs jail time</span>
+        <span class="lj">Jail years needed</span><span class="lp">In your plan</span>
       </div>
     </section>
 
     <aside class="side">
-      <section class="panel card" id="detail" aria-live="polite"></section>
-      <section class="panel card" aria-labelledby="planTitle">
+      <section class="panel card" id="detail" data-spy aria-live="polite"></section>
+      <section class="panel card" id="plan" data-spy aria-labelledby="planTitle">
         <h2 class="panel-title" id="planTitle">Your plan</h2>
         <ul class="plan-list" id="planList"></ul>
-        <p class="runs" id="planEmpty">Click something in the tree and hit "Add to plan".</p>
+        <p class="runs" id="planEmpty">Pick something in the tree and hit "Add to plan". It adds up every unlock on the way.</p>
         <div class="sum" id="sum" hidden>
           <div class="sum-row"><span class="label">Unlocks needed</span><span class="v" id="sCount">0</span></div>
           <div class="sum-row"><span class="label">Unlock cost</span><span class="v" id="sUnlock">0</span></div>
@@ -261,7 +290,7 @@
   var app = document.getElementById("app");
 
   // Layout sizes (world units = px at 100% zoom)
-  var TW = 84, TH = 84, SLOT = 98, LEVEL = 118, CW = 120, CH = 128, LW = 158, LH = 196, GAP_TRUNK = 10, ROOT_GAP = 40, BRANCH_GAP = 70;
+  var TW = 96, TH = 102, SLOT = 110, LEVEL = 136, CW = 120, CH = 128, LW = 158, LH = 196, GAP_TRUNK = 10, ROOT_GAP = 40, BRANCH_GAP = 70;
   var UP_LEFT = ["Documents", "Construction"], UP_RIGHT = ["Furnishings", "Production", "Gadgets"];
   var DOWN_LEFT = ["Vehicles"], DOWN_RIGHT = ["Weapons", "Gear"];
 
@@ -341,6 +370,12 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function money(n) { return n > 0 ? "$" + fmt.format(n) : "Free"; }
+  function short(n) {
+    if (!(n > 0)) return "Free";
+    if (n >= 1e6) return "$" + (Math.round(n / 1e5) / 10).toString().replace(/\.0$/, "") + "M";
+    if (n >= 1e3) return "$" + Math.round(n / 1e3) + "k";
+    return "$" + n;
+  }
   function tierClass(n) { return "t-" + (n.settlement ? n.settlement : "any"); }
   function hashOf(id) { return id.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 
@@ -489,7 +524,7 @@
       var b = e.target.closest("button[data-branch]"); if (!b) return;
       var br = b.getAttribute("data-branch");
       listBranch = br;
-      if (state.view === "tree") focusBranch(br); else renderView();
+      if (state.view === "tree") { glide(); focusBranch(br); } else renderView();
       renderBranches();
     });
     el.detail.addEventListener("click", onDetailClick);
@@ -512,9 +547,10 @@
     listBranch = byId[id].branch;
     saveState();
     try { history.replaceState(null, "", "#" + hashOf(id)); } catch (e) { /* ignore */ }
-    if (state.view === "tree") { paint(); if (jump) focusNode(id, Math.max(cam.s, 0.8)); }
+    if (state.view === "tree") { paint(); if (jump) { glide(); focusNode(id, Math.max(cam.s, 0.8)); } }
     else renderView();
     renderDetail(); renderPlan();
+    if (el.detail && !(window.RR && RR.reduceMotion)) { el.detail.classList.remove("changed"); void el.detail.offsetWidth; el.detail.classList.add("changed"); }
   }
 
   function renderAll() { if (state.view === "tree") paint(); else renderView(); renderDetail(); renderPlan(); }
@@ -522,7 +558,7 @@
   function renderBranches() {
     el.branches.innerHTML = data.branches.map(function (b) {
       var n = data.items.filter(function (it) { return it.branch === b; }).length;
-      return '<button type="button" class="chipbtn" data-branch="' + esc(b) + '" aria-pressed="' + (state.view === "list" && b === listBranch) + '">' + esc(b) + '<span class="n">' + n + "</span></button>";
+      return '<button type="button" class="chipbtn" data-branch="' + esc(b) + '" aria-pressed="' + (b === listBranch) + '">' + esc(b) + '<span class="n">' + n + "</span></button>";
     }).join("");
   }
 
@@ -531,8 +567,8 @@
     if (!q) { el.hits.hidden = true; el.hits.innerHTML = ""; return; }
     var hits = data.items.filter(function (it) { return label(it).toLowerCase().indexOf(q) >= 0; }).slice(0, 30);
     el.hits.innerHTML = hits.length ? hits.map(function (n) {
-      return '<li><button type="button" data-id="' + esc(n.id) + '"><span>' + esc(label(n)) + '</span><span class="b">' + esc(n.branch) + " · " + money(n.unlock) + "</span></button></li>";
-    }).join("") : '<li class="empty" style="padding:10px 12px">Nothing matches that.</li>';
+      return '<li><button type="button" data-id="' + esc(n.id) + '"><span>' + esc(label(n)) + '</span><span class="b"><span>' + esc(n.branch) + "</span><b>" + money(n.unlock) + "</b></span></button></li>";
+    }).join("") : '<li class="empty">Nothing matches that. Try one word, like car or vest.</li>';
     el.hits.hidden = false;
   }
 
@@ -542,14 +578,16 @@
     if (state.view === "list") { renderList(); return; }
     el.view.innerHTML =
       '<div class="stage" id="stage"><div class="world" id="world" style="width:' + layout.w + "px;height:" + layout.h + 'px"></div>' +
-      '<div class="stage-hint">Drag to move · scroll or pinch to zoom</div>' +
-      '<div class="stage-ui"><span class="zoom-ind" id="zoomInd"></span><button type="button" id="zOut" aria-label="Zoom out">−</button><button type="button" id="zIn" aria-label="Zoom in">+</button><button type="button" class="wide" id="zFit">Fit</button><button type="button" class="wide" id="zHome">Larry</button><button type="button" class="wide" id="zSel">Selected</button></div></div>';
+      '<div class="stage-hint">Drag to move. Scroll or pinch to zoom.</div><div class="selbar" id="selbar" aria-live="polite"></div>' +
+      '<div class="stage-ui"><span class="zoom-ind" id="zoomInd"></span><button type="button" class="ico" id="zOut" aria-label="Zoom out">−</button><button type="button" class="ico" id="zIn" aria-label="Zoom in">+</button><button type="button" id="zFit" title="Show the whole tree">Fit</button><button type="button" id="zHome" title="Back to Larry">Larry</button><button type="button" id="zSel" title="Go to the selected item">Selected</button></div></div>';
     el.stage = document.getElementById("stage"); el.world = document.getElementById("world"); el.zoomInd = document.getElementById("zoomInd");
-    document.getElementById("zIn").addEventListener("click", function () { zoomAt(1.25); });
-    document.getElementById("zOut").addEventListener("click", function () { zoomAt(0.8); });
-    document.getElementById("zFit").addEventListener("click", fitAll);
-    document.getElementById("zHome").addEventListener("click", home);
-    document.getElementById("zSel").addEventListener("click", function () { focusNode(state.sel, Math.max(cam.s, 0.85)); });
+    document.getElementById("zIn").addEventListener("click", function () { glide(); zoomAt(1.25); });
+    document.getElementById("zOut").addEventListener("click", function () { glide(); zoomAt(0.8); });
+    document.getElementById("zFit").addEventListener("click", function () { glide(); fitAll(); });
+    document.getElementById("zHome").addEventListener("click", function () { glide(); home(); });
+    document.getElementById("zSel").addEventListener("click", function () { glide(); focusNode(state.sel, Math.max(cam.s, 0.85)); });
+    el.selbar = document.getElementById("selbar");
+    el.selbar.addEventListener("click", function (e) { if (e.target.closest("button")) { if (window.RR) RR.scrollTo(el.detail); else el.detail.scrollIntoView(); } });
     bindPanZoom();
     paint();
     applyCam();
@@ -605,14 +643,25 @@
       if (targets[n.id]) cls.push("target");
       if (state.sel === n.id) cls.push("sel");
       if (state.hideOwned && owned[n.id]) cls.push("dim");
-      html += '<button type="button" class="' + cls.join(" ") + '" data-id="' + esc(n.id) + '" style="left:' + (p.x + ox) + "px;top:" + (p.y + oy) + 'px" title="' + esc(label(n) + " · unlock " + money(n.unlock) + (n.buy ? " · buy " + money(n.buy) : "")) + '">' +
-        '<span class="tr">' + esc(n.tier === "Any" ? "" : n.tier) + "</span>" + svgIcon(iconFor(n)) + '<span class="tn">' + esc(label(n)) + "</span>" +
+      html += '<button type="button" class="' + cls.join(" ") + '" data-id="' + esc(n.id) + '" style="left:' + (p.x + ox) + "px;top:" + (p.y + oy) + 'px" title="' + esc(label(n) + ": unlock " + money(n.unlock) + (n.buy ? ", buy " + money(n.buy) : "")) + '">' +
+        '<span class="tr">' + esc(n.tier === "Any" ? "" : n.tier) + "</span>" + svgIcon(iconFor(n)) + '<span class="tn">' + esc(label(n)) + "</span>" + '<span class="tp">' + short(n.unlock) + "</span>" +
         (n.jail ? '<span class="jb" title="Needs ' + n.jail + ' years of jail time">' + n.jail + "</span>" : "") + "</button>";
     });
     el.world.innerHTML = html;
+    var sn = byId[state.sel];
+    if (el.selbar && sn) {
+      el.selbar.innerHTML = '<span class="sb-n">' + esc(label(sn)) + '</span><span class="sb-p">' + short(sn.unlock) + " to unlock" + (sn.buy ? ", " + short(sn.buy) + " to buy" : "") + '</span><button type="button" class="btn small primary">Details</button>';
+    }
   }
 
   // ---------- Camera ----------
+  var glideTimer = null;
+  function glide() {
+    if (!el.world || (window.RR && RR.reduceMotion)) return;
+    el.world.classList.add("glide");
+    clearTimeout(glideTimer);
+    glideTimer = setTimeout(function () { if (el.world) el.world.classList.remove("glide"); }, 460);
+  }
   function applyCam() {
     if (!el.world) return;
     el.world.style.transform = "translate(" + cam.x + "px," + cam.y + "px) scale(" + cam.s + ")";
@@ -698,7 +747,7 @@
       var t = e.target.closest("[data-id]");
       if (t) { select(t.getAttribute("data-id"), false); return; }
       var c = e.target.closest("[data-branch-card]");
-      if (c) focusBranch(c.getAttribute("data-branch-card"));
+      if (c) { glide(); focusBranch(c.getAttribute("data-branch-card")); listBranch = c.getAttribute("data-branch-card"); renderBranches(); }
     }, true);
   }
 
@@ -737,41 +786,41 @@
     path.forEach(function (p) { if (!owned[p.id]) { reach += p.unlock || 0; steps++; tier = Math.max(tier, p.settlement || 0); jail = Math.max(jail, p.jail || 0); } });
     var total = reach + (n.buy || 0);
     var chain = path.map(function (p) {
-      return p.id === n.id ? "<b>" + esc(label(p)) + "</b>" : '<a data-go="' + esc(p.id) + '"' + (owned[p.id] ? ' style="color:var(--good)"' : "") + ">" + esc(label(p)) + "</a>";
+      return p.id === n.id ? "<b>" + esc(label(p)) + "</b>" : '<a data-go="' + esc(p.id) + '"' + (owned[p.id] ? ' class="owned" title="You have this"' : "") + ' href="#' + hashOf(p.id) + '">' + esc(label(p)) + "</a>";
     }).join(" → ");
-    var opens = kids[n.id].map(function (k) { return '<a data-go="' + esc(k.id) + '">' + esc(label(k)) + "</a>"; }).join(", ");
+    var opens = kids[n.id].map(function (k) { return '<a data-go="' + esc(k.id) + '" href="#' + hashOf(k.id) + '">' + esc(label(k)) + "</a>"; }).join(", ");
     var reqs = [];
     if (tier) reqs.push("a Tier " + ["", "I", "II", "III"][tier] + " settlement");
     if (jail) reqs.push(jail + " years of jail time");
     el.detail.innerHTML =
-      '<div><span class="tag' + (n.settlement === 3 ? " accent" : "") + '">' + esc(n.branch) + " · Tier " + esc(n.tier) + "</span></div>" +
+      '<div class="tags"><span class="tag">' + esc(n.branch) + '</span><span class="tag' + (n.settlement === 3 ? " accent" : "") + '">' + (n.tier === "Any" ? "Any tier" : "Tier " + esc(n.tier)) + "</span>" + (owned[n.id] ? '<span class="tag good">You have this</span>' : "") + (inPlan ? '<span class="tag accent">In your plan</span>' : "") + "</div>" +
       '<h2 class="title">' + esc(label(n)) + "</h2>" +
       '<div class="facts">' +
       '<div class="fact"><span class="label">Unlock</span><span class="v">' + money(n.unlock) + "</span></div>" +
       '<div class="fact"><span class="label">Buy</span><span class="v">' + (n.buy ? money(n.buy) : "–") + "</span></div>" +
-      '<div class="fact"><span class="label">To get here</span><span class="v">' + (steps ? money(reach) + ' <span style="color:var(--muted);font-size:12px">(' + steps + ")</span>" : "Done") + "</span></div>" +
+      '<div class="fact"><span class="label">To get here</span><span class="v">' + (steps ? money(reach) + " <small>" + steps + (steps === 1 ? " unlock" : " unlocks") + "</small>" : "Done") + "</span></div>" +
       '<div class="fact"><span class="label">Jail time</span><span class="v">' + (n.jail ? n.jail + " years" : "None") + "</span></div>" +
       '<div class="fact wide"><span class="label">Total to own one</span><span class="v big">' + money(total) + "</span></div>" +
-      (n.city ? '<div class="fact wide"><span class="label">City store</span><span class="v">' + money(n.city) + ' <span style="color:var(--muted);font-size:12px">· buy it on the Black Market instead</span></span></div>' : "") +
+      (n.city ? '<div class="fact wide"><span class="label">City store</span><span class="v">' + money(n.city) + " <small>Buy it on the Black Market instead</small></span></div>" : "") +
       "</div>" +
       '<div class="chain">' + (path.length > 1 ? "Path: " + chain : "Nothing needed before this.") + (opens ? "<br>Opens: " + opens : "") +
       (reqs.length ? "<br>Needs " + reqs.join(" and ") + "." : "") + "</div>" +
       '<div class="actions">' +
       '<button type="button" class="btn small' + (inPlan ? "" : " primary") + '" data-act="plan">' + (inPlan ? "Remove from plan" : "Add to plan") + "</button>" +
       '<button type="button" class="btn small" data-act="own">' + (owned[n.id] ? "I don't have this" : "I have this") + "</button>" +
-      '<a class="btn small" style="display:inline-flex;align-items:center;text-decoration:none" href="' + esc(n.url) + '" target="_blank" rel="noopener">Source ↗</a>' +
+      '<a class="btn small ghost" href="' + esc(n.url) + '" target="_blank" rel="noopener">Source</a>' +
       "</div>";
   }
 
   function onDetailClick(e) {
     var go = e.target.closest("[data-go]");
-    if (go) { select(go.getAttribute("data-go"), true); return; }
+    if (go) { e.preventDefault(); select(go.getAttribute("data-go"), true); return; }
     var act = e.target.closest("button[data-act]");
     if (!act) return;
     var id = state.sel;
     if (act.getAttribute("data-act") === "plan") {
-      if (state.plan.indexOf(id) >= 0) state.plan = state.plan.filter(function (x) { return x !== id; });
-      else state.plan.push(id);
+      if (state.plan.indexOf(id) >= 0) { state.plan = state.plan.filter(function (x) { return x !== id; }); if (window.RR) RR.toast("Removed " + label(byId[id]) + " from your plan"); }
+      else { state.plan.push(id); if (window.RR) RR.toast("Added " + label(byId[id]) + " to your plan"); }
     } else {
       if (state.owned.indexOf(id) >= 0) {
         var drop = {}; (function mark(n) { drop[n.id] = 1; kids[n.id].forEach(mark); })(byId[id]);
@@ -787,7 +836,7 @@
     var pc = planCalc();
     el.planList.innerHTML = state.plan.map(function (id) {
       var n = byId[id];
-      return '<li><button type="button" class="go" data-go="' + esc(id) + '">' + esc(label(n)) + ' <span style="color:var(--muted);font-size:12px">' + esc(n.branch) + '</span></button><button type="button" class="x" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(label(n)) + '">×</button></li>';
+      return '<li><button type="button" class="go" data-go="' + esc(id) + '">' + esc(label(n)) + "<span>" + esc(n.branch) + '</span></button><button type="button" class="x" data-rm="' + esc(id) + '" aria-label="Remove ' + esc(label(n)) + '">×</button></li>';
     }).join("");
     el.planEmpty.hidden = !!state.plan.length;
     el.sum.hidden = !state.plan.length;
@@ -807,14 +856,14 @@
 
   function copyPlan() {
     var pc = planCalc();
-    if (!state.plan.length) { el.copyMsg.textContent = "Add something to your plan first."; return; }
+    if (!state.plan.length) { if (window.RR) RR.toast("Add something to your plan first."); else el.copyMsg.textContent = "Add something to your plan first."; return; }
     var lines = ["**ROB RUN unlock plan**"];
     state.plan.forEach(function (id) { var n = byId[id]; lines.push("• " + label(n) + " (" + n.branch + ")"); });
     lines.push("Unlocks needed: " + pc.list.length + " · " + money(pc.unlock));
     lines.push("Buying it: " + money(pc.buy));
     lines.push("Total: " + money(pc.unlock + pc.buy) + (pc.tier ? " · needs Tier " + ["", "I", "II", "III"][pc.tier] : "") + (pc.jail ? " · " + pc.jail + " yrs jail" : ""));
     var text = lines.join("\n");
-    function done(msg) { el.copyMsg.textContent = msg; setTimeout(function () { el.copyMsg.textContent = ""; }, 3000); }
+    function done(msg) { if (window.RR) { RR.toast(msg); return; } el.copyMsg.textContent = msg; setTimeout(function () { el.copyMsg.textContent = ""; }, 3000); }
     try { navigator.clipboard.writeText(text).then(function () { done("Copied. Paste it in Discord."); }, function () { done("Couldn't copy here."); }); }
     catch (e) { done("Couldn't copy here."); }
   }

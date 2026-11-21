@@ -2,227 +2,318 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FAQ · ROB RUN Tools</title>
-<meta name="description" content="Quick answers to common ROB RUN questions: wipes, keeping your cash, what you lose when you die, Notoriety, where to sell, unlocks, cops and recent patches.">
+<meta name="description" content="Straight answers to common ROB RUN questions: wipes, keeping your cash, what you lose when you die, Notoriety, where to sell, unlocks, cops and recent patches.">
 <meta property="og:title" content="ROB RUN FAQ">
 <meta property="og:description" content="Wipes, keeping your cash, what you lose when you die, Notoriety, where to sell, unlocks, cops and recent patches.">
-<meta name="theme-color" content="#0d0e11">
+<meta name="theme-color" content="#162027">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js" defer></script>
 <style>
-.faq { display: grid; }
-.q { border-top: 1px solid var(--line); }
+.faq-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.faq-tools .find { position: relative; flex: 1 1 280px; max-width: 460px; }
+.faq-tools .find svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--smoke); pointer-events: none; }
+.faq-tools input { padding-left: 42px; }
+.faq-tools .hint { color: var(--smoke); font-size: 14px; }
+kbd { display: inline-block; min-width: 20px; padding: 0 5px; border: 1px solid var(--rope); border-bottom-width: 2px; border-radius: 5px; font: 600 12px/18px var(--font-body); text-align: center; color: var(--receipt); }
+
+.topic { display: grid; gap: 12px; }
+.topic-title { font-family: var(--font-display); font-weight: 700; font-size: 36px; line-height: 1; padding-top: 14px; }
+.faq { overflow: hidden; }
+.q { border-top: 1px solid var(--rope); }
 .q:first-child { border-top: 0; }
-.q summary {
-  list-style: none; cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center; gap: 16px;
-  padding: 16px 18px;
-  font-family: var(--font-display); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase;
+.q > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 20px; font-size: 17.5px; font-weight: 600; line-height: 1.35;
+  transition: background-color 160ms ease, color 160ms ease;
 }
-.q summary::-webkit-details-marker { display: none; }
-.q summary::after { content: "+"; font-family: var(--font-mono); font-size: 18px; color: var(--muted); }
-.q[open] summary::after { content: "−"; color: var(--accent); }
-.q summary:hover { background: #1a1d22; }
-.q summary .new { margin-left: auto; margin-right: 4px; font-family: var(--font-mono); font-size: 10px; font-weight: 400; letter-spacing: 0.12em; color: var(--accent); border: 1px solid rgba(240, 180, 41, 0.45); border-radius: 2px; padding: 2px 6px; }
-.a { padding: 0 18px 18px; display: grid; gap: 10px; max-width: 72ch; color: #c9ccd2; }
+.q > summary:hover { background: var(--pier-2); }
+.q > summary:hover .chev { color: var(--receipt); }
+.q .new { margin-left: auto; }
+.a { padding: 0 20px 20px; display: grid; gap: 12px; max-width: 74ch; color: #d3d6d2; }
 .a p { margin: 0; }
-.a ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
-.a table { border-collapse: collapse; width: 100%; max-width: 560px; font-size: 14px; }
-.a th, .a td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-.a th { font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.a td.n { font-family: var(--font-mono); text-align: right; white-space: nowrap; }
-.a .note { font-size: 13px; color: var(--muted); }
-.a .src { font-size: 12px; color: var(--muted); }
-.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.log li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
-.log .d { font-family: var(--font-mono); font-size: 12px; color: var(--accent); padding-top: 2px; }
-.sources { padding: 18px; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
-.sources ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.a ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; }
+.a li::marker { color: var(--sodium); }
+.a strong { color: var(--receipt); }
+.a table { max-width: 600px; }
+.a th, .a td { text-align: left; white-space: normal; padding: 10px 12px; vertical-align: top; }
+.a th:first-child, .a td:first-child { padding-left: 0; }
+.a td.n { text-align: right; white-space: nowrap; font-weight: 600; }
+.a .note { font-size: 14px; color: var(--smoke); }
+.a .src { font-size: 13px; color: var(--smoke); }
+.a ul.log { list-style: none; padding: 0; gap: 16px; }
+.log li { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 14px; }
+.log .d { font-family: var(--font-display); font-weight: 700; font-size: 20px; line-height: 1.15; color: var(--sodium); }
+.nomatch { margin: 0; padding: 22px 20px; color: var(--smoke); }
+mark { background: var(--sodium-soft); color: var(--sodium); border-radius: 3px; padding: 0 2px; }
+.sources { padding: 20px; display: grid; gap: 10px; color: var(--smoke); }
+.sources ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+@media (max-width: 640px) {
+  .q > summary { padding: 16px; font-size: 16.5px; }
+  .a { padding: 0 16px 18px; }
+  .log li { grid-template-columns: 1fr; gap: 2px; }
+  .topic-title { font-size: 32px; }
+}
 </style>
 </head>
 <body>
-<nav class="nav" aria-label="Main">
+<header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true"></span>ROB RUN <span class="brand-dim">Tools</span></a>
-    <div class="nav-links">
-      <a href="../split/">Split</a>
-      <a href="../upgrades/">Unlocks</a>
-      <a href="../items/">Prices</a>
-      <a href="./" aria-current="page">FAQ</a>
-    </div>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#f4b740"/><rect x="6.5" y="10" width="19" height="12" rx="2.5" fill="none" stroke="#1f1705" stroke-width="2.2"/><circle cx="16" cy="16" r="2.7" fill="#1f1705"/><path d="M10.4 13.4v5.2M21.6 13.4v5.2" stroke="#1f1705" stroke-width="2" stroke-linecap="round"/></svg><b>ROB RUN</b><small>Tools</small></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
+      <a href="../split/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
+      <a href="../upgrades/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><circle cx="5.5" cy="19" r="2.2"/><circle cx="18.5" cy="19" r="2.2"/><path d="M12 7.2V12M12 12H5.5v4.8M12 12h6.5v4.8"/></svg><span>Unlocks</span></a>
+      <a href="../items/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.6V4.5h8.1l8.9 8.9-8 8z"/><circle cx="8.2" cy="9.2" r="1.6"/></svg><span>Prices</span></a>
+      <a href="../faq/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.6a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6"/><path d="M12 17.1v.2"/></svg><span>FAQ</span></a>
+    </nav>
   </div>
-</nav>
+</header>
 
 <main class="page">
   <header class="page-head">
     <h1>FAQ</h1>
-    <p class="sub">Quick answers to the stuff people keep asking. Last checked November 16, 2026, against Kefir's own posts (newest is from Nov 14) and the guides at the bottom. It's Early Access and things change fast, so if the game says something different, trust the game.</p>
+    <p class="sub">Straight answers to what people keep asking. Last checked <strong>November 21, 2026</strong> against Kefir's own posts (the newest is from Nov 20) and the guides at the bottom. It's Early Access and things change fast, so if the game says something different, trust the game.</p>
   </header>
 
-  <section class="panel faq">
-    <details class="q" open>
-      <summary>When does the server wipe, and what do I lose?</summary>
-      <div class="a">
-        <p>Every server wipes 7 days after it opened. Kefir calls it the Federal Raid. There's no single wipe day for everyone, so check the timer on your own server. New servers open every day: EU at 5 PM UTC, East US at 8 PM ET (7 PM Central). Kefir says 7 days is the length for now and could change.</p>
-        <p><strong>You lose:</strong> all your cash, including what's in the bank, plus items, vehicles, houses, land, your unlocks, clan spending and bribes. All of it gets turned into jail time, and more jail time raises your Authority, which unlocks shipments and tattoos.</p>
-        <p><strong>You keep:</strong> cosmetics, B-Coins, your look and name, tutorial progress, settings and your total jail time.</p>
-        <p>Bottom line: spend before the wipe. Money in the bank on wipe day is gone.</p>
-      </div>
-    </details>
+  <nav class="jump" aria-label="Topics">
+    <a href="#t-wipe">Wipes and cash</a>
+    <a href="#t-death">Dying and Notoriety</a>
+    <a href="#t-sell">Selling</a>
+    <a href="#t-unlock">Unlocks and shopping</a>
+    <a href="#t-cops">Cops</a>
+    <a href="#t-crew">Servers and crew</a>
+    <a href="#t-quick">Quick ones</a>
+    <a href="#t-log">What changed</a>
+    <a href="#sources">Sources</a>
+  </nav>
 
-    <details class="q">
-      <summary>How do I keep my cash from getting stolen?</summary>
-      <div class="a">
-        <p>Open an account at Looty Bay Bank. It costs $5,000, and you have to walk in as a Civilian, not with your mask on. Then put your dirty cash in the Laundering Desk at your base. It takes a while, and the clean money goes straight to your bank where nobody can take it.</p>
-        <p>If you pull it back out at an ATM, it's stealable again. Before you have a base, Lenny will launder for you, but he takes a cut. Your own desk is free. If you use Lenny, put his fee in the <a href="../split/">split calculator</a> so your numbers are real.</p>
-      </div>
-    </details>
+  <div class="faq-tools">
+    <div class="find">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+      <label for="fq" class="sr-only">Search the FAQ</label>
+      <input type="search" id="fq" placeholder="Search, like bank, bribe or wipe" autocomplete="off" spellcheck="false" data-slash>
+    </div>
+    <button type="button" class="btn small" id="openAll">Open all</button>
+    <button type="button" class="btn small" id="closeAll">Close all</button>
+    <span class="hint" id="fcount">Press <kbd>/</kbd> to search</span>
+  </div>
 
-    <details class="q">
-      <summary>What do I lose if I die?</summary>
-      <div class="a">
-        <table>
-          <thead><tr><th>What happened</th><th>What you lose</th></tr></thead>
-          <tbody>
-            <tr><td>Criminal dies in Looty Bay</td><td>Your whole inventory</td></tr>
-            <tr><td>Criminal surrenders to cops</td><td>Your bag. You keep equipped gear</td></tr>
-            <tr><td>Cop takes your bribe</td><td>Just the bribe, paid from your bank. You leave with your bag and gear</td></tr>
-            <tr><td>Civilian dies in Looty Bay</td><td>Nothing. Bag and gear stay</td></tr>
-            <tr><td>Cop dies</td><td>Department gear. Personal gear stays</td></tr>
-            <tr><td>Anyone dies in the desert</td><td>All loot</td></tr>
-          </tbody>
-        </table>
-        <p>Your gear also loses durability every time you die, and there's no way to repair it yet. Kefir says repairs are planned.</p>
-        <p>Taking your mask off doesn't clear Criminal status. You have to actually leave Looty Bay.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>What is Notoriety?</summary>
-      <div class="a">
-        <p>Hit places back to back in the same trip into the city and your Notoriety goes up. Higher Notoriety gets you more from the Fence and the Smuggler, up to about 50% more at the top. That's the low-to-high range on the <a href="../items/">price check</a>. The catch is that your bag gets bigger and cops and other players start hunting you.</p>
-        <p>It resets when you leave Looty Bay. Solo players start at Notoriety level 4 and get bonuses on selling and loot. Duos also start higher than full crews.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>Where should I sell my loot?</summary>
-      <div class="a">
-        <ul>
-          <li><strong>Fence:</strong> the dollar signs on the map. Buys stolen items. Grab your cash off the counter right after you sell, because money left there can be stolen.</li>
-          <li><strong>Smuggler (Cargo Exchange):</strong> buys cargo. Bigger deliveries pay better, and each one adds a point to a Cargo Sheet that you can sell once it's full.</li>
-          <li><strong>Sales Center:</strong> one in each district. Buys everything in your trunk, and the price depends on the district's level. You can only trade there if you rent a plot in that district.</li>
-        </ul>
-        <p>Black Market stuff sells back for a lot less than you paid. A Longhorn Wild costs $4.5M and the fence gives you about $1.8M for it, so don't buy things to flip them.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>Should I sell cargo or open it?</summary>
-      <div class="a">
-        <p>Open it. Since the November 5 patch, opening cargo at a workbench in your base pays more than selling it as is. Contraband from Lenny is worth next to nothing until you repack it on a Contraband Workbench.</p>
-        <p>Two ways to lose it on the way: drawing a weapon while you're carrying cargo makes you drop it, and switching cars dumps whatever was in the old trunk on the ground.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>Black Market or city stores?</summary>
-      <div class="a">
-        <p>Use the Black Market, through Lenny or your base laptop. City stores charge about three times as much. A lot of Black Market stock has to be unlocked in the Shipments tree first, and you can't buy from vendors while your base is being raided.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>How do unlocks work?</summary>
-      <div class="a">
-        <p>Press <strong>H</strong> to open Larry's Shipments menu. Each item costs money to unlock, and then you buy it on the Black Market. Some items also need your base in a settlement of a certain level, or a minimum amount of jail time.</p>
-        <p>Check the requirements before you save up, because more cash won't get you past a settlement lock. Example: the Longhorn Wild costs $500k to unlock after the Royal E, needs a level 3 settlement, and then costs $4.5M on the Black Market.</p>
-        <p>Kefir's wipe post lists your unlocked "skills and tech" among the things the feds take, so plan on starting the tree over every wipe. Jail time carries over, though, so the jail-time locks get easier each week.</p>
-        <p>The <a href="../upgrades/#longhorn-wild">unlock tree</a> adds all of this up for you, path and all.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>Playing cop: how do I join and what does it pay?</summary>
-      <div class="a">
-        <p><strong>Joining:</strong> talk to the officer at the Police Station when a slot is open. Since November 5 there can only be 4 cops in the city at once, so you might have to wait. You get a free uniform, weapons and a car, and the department holds your own gear until you clock out. If you're in a party, everyone in Looty Bay has to play the same role. On a fresh server, patrol cops only get pistols for the first 30 minutes.</p>
-        <p><strong>Pay:</strong> Kefir says cops earn a percentage of the value of the loot they confiscate, so a rich robber pays far more than a broke one. Some tips:</p>
-        <ul>
-          <li>Arrests pay more than kills, and killing someone who surrendered pays nothing.</li>
-          <li>Turn your siren on and use the Surrender Order for bonuses.</li>
-          <li>There's an earnings cap per shift.</li>
-          <li>Since November 5, a quarter of your pay comes as keys, badges and gear, and the rest is cash.</li>
-          <li>Badges (Sergeant, Lieutenant, Captain) get you better gear. They're single-use, so if you die on duty you need a new one.</li>
-        </ul>
-        <p>Arrested criminals can offer you a bribe out of their bank account, and taking it is your call.</p>
-        <p class="note">Launch guides listed these amounts. Kefir raised cop pay on November 5 without posting new numbers, so treat them as a minimum:</p>
-        <table>
-          <thead><tr><th>Action</th><th style="text-align:right">Paid at launch</th></tr></thead>
-          <tbody>
-            <tr><td>Arresting a criminal</td><td class="n">$9,000–15,000</td></tr>
-            <tr><td>Salary for killing a criminal</td><td class="n">$5,000</td></tr>
-            <tr><td>Seizing a criminal's loot (base)</td><td class="n">$4,000</td></tr>
-            <tr><td>Killing a criminal</td><td class="n">$2,000</td></tr>
-            <tr><td>Seizing vehicle loot (base)</td><td class="n">$2,000</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>How do I switch servers?</summary>
-      <div class="a">
-        <p>Right now you have to surrender and go back to prison, and you should expect to lose what you built on the old server. Kefir says an easier way to pick a server is coming. There are only EU and East US servers for now, and Asia or Oceania won't happen before the end of 2026.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>How big can my crew be?</summary>
-      <div class="a">
-        <p>Parties max out at 3, and Kefir isn't planning to raise that, because bigger parties meant fewer random run-ins in testing. Clans can have up to 100 people.</p>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>Quick ones</summary>
-      <div class="a">
-        <ul>
-          <li><strong>Can't type in general chat?</strong> Only players renting a settlement plot can post there.</li>
-          <li><strong>Want a new name?</strong> Talk to the Tattoo Artist in prison.</li>
-          <li><strong>Where'd the smoke grenades go?</strong> You can't buy them right now because cheaters were abusing them. They still show up as loot sometimes.</li>
-          <li><strong>Don't sell everything you find.</strong> Keys open safes, lottery tickets can pay out big, and a jammer is how you steal the Buletti from the Grand Hotel.</li>
-        </ul>
-      </div>
-    </details>
-
-    <details class="q">
-      <summary>What's changed since launch? <span class="new">Nov 16</span></summary>
-      <div class="a">
-        <ul class="log">
-          <li><span class="d">Nov 14</span><span>EU servers had login problems and got restarted. US servers weren't affected.</span></li>
-          <li><span class="d">Nov 13</span><span>Kefir answered the big questions: parties stay at 3, solo players start at Notoriety 4, no weapon repair yet (it's planned), easier server switching is coming, and they'll make valuable items harder to sell by accident. Over 20,000 cheaters banned so far.</span></li>
-          <li><span class="d">Nov 11</span><span>First Federal Raid on the launch servers. Smoke grenades pulled from stores, general chat limited to plot renters, and name changes added at the prison Tattoo Artist.</span></li>
-          <li><span class="d">Nov 5</span><span>Max 4 cops per city, pistol-only start cut to 30 minutes, cop pay raised (now 75% cash). Plots, houses and cars cost more. Settlement owners get more tax. Opening cargo at your workbench now pays more than selling it. Gold safes are rarer but worth more.</span></li>
-          <li><span class="d">Nov 4</span><span>Launch. Longer cop respawns, tier 1 settlements and land cost documents instead of cash, much bigger base business profits and Laundering Desk capacity, more cash in dumpsters, and the Buletti can't carry shipments anymore.</span></li>
-        </ul>
-        <p class="src">From Kefir's Steam news and Discord posts, as logged by the ROB RUN Wiki.</p>
-      </div>
-    </details>
+  <section class="topic" id="t-wipe" data-spy aria-labelledby="h-wipe">
+    <h2 class="topic-title" id="h-wipe">Wipes and cash</h2>
+    <div class="panel faq">
+      <details class="q acc" id="wipe" open>
+        <summary>When does the server wipe, and what do I lose?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Every server wipes 7 days after it opened. Kefir calls it the Federal Raid. There's no single wipe day for everyone, so check the timer on your own server. New servers open every day: EU at 5 PM UTC and East US at 8 PM ET (7 PM Central). Kefir says 7 days is the length for now and could change.</p>
+          <p><strong>You lose</strong> all your cash, including what's in the bank, plus items, vehicles, houses, land, your unlocks, clan spending and bribes. All of it gets turned into jail time, and more jail time raises your Authority, which unlocks shipments and tattoos. Since November 17 there are daily and overall caps on how much jail time you can earn, but Kefir hasn't said what they are.</p>
+          <p><strong>You keep</strong> cosmetics, B-Coins, your look and name, tutorial progress, settings and your total jail time.</p>
+          <p>Bottom line: spend before the wipe. Money in the bank on wipe day is gone.</p>
+        </div>
+      </details>
+      <details class="q acc" id="cash">
+        <summary>How do I keep my cash from getting stolen?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Open an account at Looty Bay Bank. It costs $5,000, and you have to walk in as a Civilian, not with your mask on. Then put your dirty cash in the Laundering Desk at your base. It takes a while, and the clean money goes straight to your bank where nobody can take it.</p>
+          <p>If you pull it back out at an ATM, it's stealable again. Before you have a base, Lenny will launder for you, but he takes a cut. Your own desk is free. If you use Lenny, put his fee in the <a href="../split/#settings">split calculator</a> so your numbers are real.</p>
+        </div>
+      </details>
+    </div>
   </section>
 
-  <section class="panel sources" aria-labelledby="srcTitle">
+  <section class="topic" id="t-death" data-spy aria-labelledby="h-death">
+    <h2 class="topic-title" id="h-death">Dying and Notoriety</h2>
+    <div class="panel faq">
+      <details class="q acc" id="death">
+        <summary>What do I lose if I die?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <table>
+            <thead><tr><th>What happened</th><th>What you lose</th></tr></thead>
+            <tbody>
+              <tr><td>Criminal dies in Looty Bay</td><td>Your whole inventory</td></tr>
+              <tr><td>Criminal surrenders to cops</td><td>Your bag. You keep equipped gear</td></tr>
+              <tr><td>Cop takes your bribe</td><td>Just the bribe, paid from your bank. You leave with your bag and gear</td></tr>
+              <tr><td>Civilian dies in Looty Bay</td><td>Nothing. Bag and gear stay</td></tr>
+              <tr><td>Cop dies</td><td>Department gear. Personal gear stays</td></tr>
+              <tr><td>Anyone dies in the desert</td><td>All loot</td></tr>
+            </tbody>
+          </table>
+          <p>Your gear also loses durability every time you die, and there's no way to repair it yet. Kefir says repairs are planned.</p>
+          <p>Taking your mask off doesn't clear Criminal status. You have to actually leave Looty Bay.</p>
+        </div>
+      </details>
+      <details class="q acc" id="notoriety">
+        <summary>What is Notoriety?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Hit places back to back in the same trip into the city and your Notoriety goes up. Higher Notoriety gets you more from the Fence and the Smuggler, up to about 50% more at the top. That's the low-to-high range on the <a href="../items/">price check</a>. The catch is that your bag gets bigger and cops and other players start hunting you.</p>
+          <p>It resets when you leave Looty Bay. Solo players start at Notoriety level 4 and get bonuses on selling and loot. Duos also start higher than full crews. Kefir says it's also looking at separate matchmaking for solo players in the city.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-sell" data-spy aria-labelledby="h-sell">
+    <h2 class="topic-title" id="h-sell">Selling</h2>
+    <div class="panel faq">
+      <details class="q acc" id="sell">
+        <summary>Where should I sell my loot?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <ul>
+            <li><strong>Fence:</strong> the dollar signs on the map. Buys stolen items. Grab your cash off the counter right after you sell, because money left there can be stolen.</li>
+            <li><strong>Smuggler (Cargo Exchange):</strong> buys cargo. Bigger deliveries pay better, and each one adds a point to a Cargo Sheet that you can sell once it's full.</li>
+            <li><strong>Sales Center:</strong> one in each district. Buys everything in your trunk, and the price depends on the district's level. You can only trade there if you rent a plot in that district.</li>
+          </ul>
+          <p>Black Market stuff sells back for a lot less than you paid. A Longhorn Wild costs $4.5M and the fence gives you about $1.8M for it, so don't buy things to flip them.</p>
+        </div>
+      </details>
+      <details class="q acc" id="cargo">
+        <summary>Should I sell cargo or open it?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Open it. Since the November 5 patch, opening cargo at a workbench in your base pays more than selling it as is. Contraband from Lenny is worth next to nothing until you repack it on a Contraband Workbench, and since November 20 the game warns you if you try to buy contraband without a home location.</p>
+          <p>Two ways to lose it on the way: drawing a weapon while you're carrying cargo makes you drop it, and switching cars dumps whatever was in the old trunk on the ground.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-unlock" data-spy aria-labelledby="h-unlock">
+    <h2 class="topic-title" id="h-unlock">Unlocks and shopping</h2>
+    <div class="panel faq">
+      <details class="q acc" id="unlocks">
+        <summary>How do unlocks work?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Press <kbd>H</kbd> to open Larry's Shipments menu. Since November 17 you can also open it from Lenny's menu. Each item costs money to unlock, and then you buy it on the Black Market. Some items also need your base in a settlement of a certain level, or a minimum amount of jail time.</p>
+          <p>Check the requirements before you save up, because more cash won't get you past a settlement lock. Example: the Longhorn Wild costs $500k to unlock after the Royal E, needs a level 3 settlement, and then costs $4.5M on the Black Market.</p>
+          <p>Kefir's wipe post lists your unlocked "skills and tech" among the things the feds take, so plan on starting the tree over every wipe. Jail time carries over, though, so the jail-time locks get easier each week.</p>
+          <p>The <a href="../upgrades/#longhorn-wild">unlock tree</a> adds all of this up for you, path and all.</p>
+        </div>
+      </details>
+      <details class="q acc" id="black-market">
+        <summary>Black Market or city stores?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Use the Black Market, through Lenny or your base laptop. City stores charge about three times as much. A lot of Black Market stock has to be unlocked in the Shipments tree first, and you can't buy from vendors while your base is being raided.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-cops" data-spy aria-labelledby="h-cops">
+    <h2 class="topic-title" id="h-cops">Cops</h2>
+    <div class="panel faq">
+      <details class="q acc" id="cops">
+        <summary>Playing cop: how do I join and what does it pay?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p><strong>Joining:</strong> talk to the officer at the Police Station when a slot is open. Since November 5 there can only be 4 cops in the city at once, so you might have to wait, and since November 20 the game checks for a free spot before it lets you pick your gear. You get a free uniform, weapons and a car, and the department holds your own gear until you clock out. If you're in a party, everyone in Looty Bay has to play the same role. On a fresh server, patrol cops only get pistols for the first 30 minutes.</p>
+          <p><strong>Pay:</strong> Kefir says cops earn a percentage of the value of the loot they confiscate, so a rich robber pays far more than a broke one.</p>
+          <ul>
+            <li>Arrests pay more than kills, and killing someone who surrendered pays nothing.</li>
+            <li>Turn your siren on and use the Surrender Order for bonuses.</li>
+            <li>There's an earnings cap per shift.</li>
+            <li>Since November 5, a quarter of your pay comes as keys, badges and gear, and the rest is cash.</li>
+            <li>Badges (Sergeant, Lieutenant, Captain) get you better gear. They're single-use, so if you die on duty you need a new one.</li>
+          </ul>
+          <p>Arrested criminals can offer you a bribe out of their bank account, and taking it is your call.</p>
+          <p class="note">Launch guides listed these amounts. Kefir raised cop pay on November 5 without posting new numbers, so treat them as a minimum:</p>
+          <table>
+            <thead><tr><th>Action</th><th style="text-align:right">Paid at launch</th></tr></thead>
+            <tbody>
+              <tr><td>Arresting a criminal</td><td class="n">$9,000–15,000</td></tr>
+              <tr><td>Salary for killing a criminal</td><td class="n">$5,000</td></tr>
+              <tr><td>Seizing a criminal's loot (base)</td><td class="n">$4,000</td></tr>
+              <tr><td>Killing a criminal</td><td class="n">$2,000</td></tr>
+              <tr><td>Seizing vehicle loot (base)</td><td class="n">$2,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-crew" data-spy aria-labelledby="h-crew">
+    <h2 class="topic-title" id="h-crew">Servers and crew</h2>
+    <div class="panel faq">
+      <details class="q acc" id="servers">
+        <summary>How do I switch servers or find my crew's server?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Since November 20, online friends show up in the server list, so you can see which server your crew is on. To switch, you still have to surrender and go back to prison, and you should expect to lose what you built on the old server. Kefir says an easier way to pick a server is coming.</p>
+          <p>If you change regions, your progress and Battle Pass points now come with you (since November 17). There are only EU and East US servers for now. Kefir says no new regions are coming in the next month, and Asia or Oceania won't happen before the end of 2026.</p>
+        </div>
+      </details>
+      <details class="q acc" id="crew">
+        <summary>How big can my crew be?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Parties max out at 3, and Kefir isn't planning to raise that, because bigger parties meant fewer random run-ins in testing. Clans can have up to 100 people.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-quick" data-spy aria-labelledby="h-quick">
+    <h2 class="topic-title" id="h-quick">Quick ones</h2>
+    <div class="panel faq">
+      <details class="q acc" id="chat">
+        <summary>Why can't I type in general chat or talk on voice?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Only players renting a settlement plot can post in general chat. Since November 17, voice chat in prison and at Lenny's Motel only works if you own a land plot or have jail time on your record.</p>
+        </div>
+      </details>
+      <details class="q acc" id="name">
+        <summary>How do I change my name?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Talk to the Tattoo Artist in prison. There's a profanity filter on names now, so keep it clean.</p>
+        </div>
+      </details>
+      <details class="q acc" id="smoke">
+        <summary>Where did the smoke grenades go?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>You can't buy them right now because cheaters were abusing them. They still turn up as loot, just a lot less often.</p>
+        </div>
+      </details>
+      <details class="q acc" id="dont-sell">
+        <summary>Is there anything I shouldn't sell?<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <p>Yes. Keys open safes, lottery tickets can pay out big, and a jammer is how you steal the Buletti from the Grand Hotel. Kefir says it's working on making those harder to sell by accident.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="topic" id="t-log" data-spy aria-labelledby="h-log">
+    <h2 class="topic-title" id="h-log">What changed since launch</h2>
+    <div class="panel faq">
+      <details class="q acc" id="changes" open>
+        <summary>Patch notes, newest first<span class="tag accent new">Updated Nov 21</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="a">
+          <ul class="log">
+            <li><span class="d">Nov 20</span><span>Online friends now show in the server list. The game checks for a free cop spot before you pick gear, warns you before buying contraband without a home, and hides settlement owners' names after they leave. More cheater detection and better networking. Kefir also said no new regions are coming in the next month and it's looking at solo matchmaking. A same-day bug held up some coin purchases and was fixed.</span></li>
+            <li><span class="d">Nov 17</span><span>Daily and overall caps on jail time (numbers not published). Shipments added to Lenny's menu. Progress and Battle Pass points carry over when you change regions. Voice chat in prison and at Lenny's limited to plot owners and players with jail time. Eviction Rights pulled from barter for now. Name filter, invert-mouse option, and a clearer ban policy.</span></li>
+            <li><span class="d">Nov 14</span><span>EU servers had login problems and got restarted. US servers weren't affected.</span></li>
+            <li><span class="d">Nov 13</span><span>Kefir answered the big questions: parties stay at 3, solo players start at Notoriety 4, no weapon repair yet (it's planned), easier server switching is coming, and valuable items will get harder to sell by accident. Over 20,000 cheaters banned so far.</span></li>
+            <li><span class="d">Nov 11</span><span>First Federal Raid on the launch servers. Smoke grenades pulled from stores, general chat limited to plot renters, and name changes added at the prison Tattoo Artist.</span></li>
+            <li><span class="d">Nov 5</span><span>Max 4 cops per city, pistol-only start cut to 30 minutes, cop pay raised (now 75% cash). Plots, houses and cars cost more. Settlement owners get more tax. Opening cargo at your workbench now pays more than selling it. Gold safes are rarer but worth more.</span></li>
+            <li><span class="d">Nov 4</span><span>Launch. Longer cop respawns, tier 1 settlements and land cost documents instead of cash, much bigger base business profits and Laundering Desk capacity, more cash in dumpsters, and the Buletti can't carry shipments anymore.</span></li>
+          </ul>
+          <p class="src">From Kefir's Steam news and Discord posts, as logged by the <a href="https://robrunwiki.com/en/updates/">ROB RUN Wiki</a>.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <p class="nomatch panel" id="nomatch" hidden></p>
+
+  <section class="panel sources" id="sources" data-spy aria-labelledby="srcTitle">
     <h2 class="panel-title" id="srcTitle">Where this comes from</h2>
     <ul>
-      <li><a href="https://store.steampowered.com/news/app/4262460">Kefir: ROB RUN news on Steam</a> (wipes, the Nov 13 Q&amp;A, server issues)</li>
-      <li><a href="https://robrunwiki.com/en/updates/">ROB RUN Wiki: update log</a> (Kefir's Discord patch notes)</li>
+      <li><a href="https://store.steampowered.com/news/app/4262460">Kefir: ROB RUN news on Steam</a> (wipes, the Nov 13 Q&amp;A, patches)</li>
+      <li><a href="https://robrunwiki.com/en/updates/">ROB RUN Wiki: update log</a> (Kefir's Discord patch notes) and <a href="https://robrunwiki.com/en/data/">open data</a> (fence prices, game version 0.7.0)</li>
+      <li><a href="https://robrungame.com/planner/">robrungame.com: Shipment Planner</a> (unlock costs, checked against its Nov 17 data)</li>
       <li><a href="https://metaforge.app/rob-run/where-to-sell-loot-in-rob-run">MetaForge: where to sell loot</a> and <a href="https://metaforge.app/rob-run/how-to-play-police-in-rob-run">how to play police</a></li>
       <li><a href="https://games.gg/rob-run/guides/rob-run-progression-explained-how-to-get-stronger/">GAMES.GG: Rob Run progression explained</a></li>
       <li><a href="https://grindnstrat.com/rob-run-money-guide/">Grind N Strat: ROB RUN money guide</a></li>
-      <li><a href="https://robrungame.com/items/longhorn-wild/">robrungame.com: Longhorn Wild prices</a></li>
     </ul>
     <p style="margin:0">Spot something wrong or out of date? Tell us and we'll fix it.</p>
   </section>
@@ -230,9 +321,59 @@
 
 <footer class="foot">
   <div class="foot-in">
-    <span>Fan-made. Not affiliated with ROB RUN or Kefir.</span>
-    <span><a href="../split/">Split calculator</a></span>
+    <p>Answers are a guide. If the game says something different, trust the game.</p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="../faq/#sources">Sources</a></p>
   </div>
 </footer>
+
+<script>
+(function () {
+  "use strict";
+  var qs = [].slice.call(document.querySelectorAll("details.q"));
+  var topics = [].slice.call(document.querySelectorAll(".topic"));
+  var input = document.getElementById("fq"), count = document.getElementById("fcount"), nomatch = document.getElementById("nomatch");
+  var touch = false; try { touch = window.matchMedia("(hover: none)").matches; } catch (e) { /* ignore */ }
+  if (touch) count.innerHTML = "";
+  var hintHTML = count.innerHTML;
+  var answers = qs.map(function (d) { return { d: d, a: d.querySelector(".a"), text: d.textContent.toLowerCase(), html: d.querySelector(".a").innerHTML }; });
+
+  function setAll(open) { qs.forEach(function (d) { if (!d.hidden && window.RR) RR.setOpen(d, open); else d.open = open; }); }
+  document.getElementById("openAll").addEventListener("click", function () { setAll(true); });
+  document.getElementById("closeAll").addEventListener("click", function () { setAll(false); });
+
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function highlight(html, terms) {
+    if (!terms.length) return html;
+    var re = new RegExp("(" + terms.map(escRe).join("|") + ")", "gi");
+    return html.split(/(<[^>]+>)/).map(function (part) { return part.charAt(0) === "<" ? part : part.replace(re, "<mark>$1</mark>"); }).join("");
+  }
+  input.addEventListener("input", function () {
+    var terms = input.value.trim().toLowerCase().split(/\s+/).filter(Boolean), hits = 0;
+    answers.forEach(function (x) {
+      var ok = terms.every(function (t) { return x.text.indexOf(t) >= 0; });
+      x.d.hidden = !ok;
+      x.a.innerHTML = highlight(x.html, terms);
+      if (ok) { hits++; if (terms.length) x.d.open = true; }
+    });
+    topics.forEach(function (t) { t.hidden = !t.querySelector("details.q:not([hidden])"); });
+    if (!terms.length) { count.innerHTML = hintHTML; nomatch.hidden = true; return; }
+    count.textContent = hits + (hits === 1 ? " answer" : " answers");
+    nomatch.hidden = hits > 0;
+    nomatch.textContent = 'Nothing matches "' + input.value.trim() + '". Try one word, like bank or wipe.';
+  });
+  input.addEventListener("keydown", function (e) { if (e.key === "Escape") { input.value = ""; input.dispatchEvent(new Event("input")); } });
+
+  // Open and scroll to a question from a link like faq/#cops
+  function fromHash() {
+    var id = (location.hash || "").slice(1);
+    var t = id && document.getElementById(id);
+    if (!t) return;
+    if (t.tagName === "DETAILS") t.open = true;
+    setTimeout(function () { if (window.RR) RR.scrollTo(t); }, 80);
+  }
+  window.addEventListener("hashchange", fromHash);
+  if (location.hash) window.addEventListener("load", fromHash);
+})();
+</script>
 </body>
 </html>
