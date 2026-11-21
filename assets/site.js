@@ -315,6 +315,27 @@
     });
   }
 
-  function init() { initNav(); initJump(); initTop(); initSlash(); }
+  /* ---- If the browser showed an old cached copy of this page, quietly load the new one once ---- */
+  function checkFresh() {
+    try {
+      var me = document.querySelector('script[src*="site.js?v="]');
+      var v = me && (me.getAttribute("src").match(/v=(\w+)/) || [])[1];
+      if (!v || !window.fetch) return;
+      var key = "rr-fresh:" + location.pathname;
+      fetch(location.pathname, { cache: "no-cache" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (html) {
+        var m = html.match(/assets\/site\.js\?v=(\w+)/);
+        if (!m) return;
+        if (m[1] === v) { sessionStorage.removeItem(key); return; }
+        if (sessionStorage.getItem(key) === m[1]) return;
+        sessionStorage.setItem(key, m[1]);
+        location.reload();
+      }).catch(function () { /* offline: keep what we have */ });
+    } catch (e) { /* ignore */ }
+  }
+
+  function init() {
+    initNav(); initJump(); initTop(); initSlash();
+    if (location.protocol.indexOf("http") === 0) setTimeout(checkFresh, 1500);
+  }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
