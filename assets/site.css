@@ -432,7 +432,7 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 
 /* ---------- The laundering desk: a cash pile that grows with your cut ---------- */
 .pile { display: grid; gap: 10px; align-content: end; min-width: 0; }
-.pile-stage { position: relative; height: 176px; margin: 0 12px; }
+.pile-stage { position: relative; height: 176px; margin: 0 12px; overflow: visible; }
 .pile-bills { position: absolute; left: 0; right: 0; top: 0; bottom: 18px; }
 .bill {
   position: absolute;
@@ -469,7 +469,7 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 @keyframes thud { 40% { transform: translateY(2px); } }
 .pile-cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; padding: 0 2px; font-size: 13px; color: var(--smoke); }
 .pile-cap b { color: var(--receipt); font-weight: 600; font-variant-numeric: tabular-nums; }
-.pile-more { position: absolute; right: 0; top: -2px; font: 700 15px/1 var(--font-display); color: var(--cash); }
+
 .pile-empty { position: absolute; left: 0; right: 0; bottom: 30px; text-align: center; font-size: 14px; color: var(--smoke); }
 
 /* ---------- Footer ---------- */
