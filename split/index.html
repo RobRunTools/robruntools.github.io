@@ -8,15 +8,15 @@
 <meta property="og:title" content="ROB RUN Split Calculator">
 <meta property="og:description" content="Split each run with your crew. Tracks your cut, averages, best run and cash per hour.">
 <meta name="theme-color" content="#12212c">
-<link rel="icon" href="../assets/favicon-32.png?v=4db9000d" sizes="32x32" type="image/png">
-<link rel="icon" href="../assets/logo-192.png?v=4db9000d" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=4db9000d">
+<link rel="icon" href="../assets/favicon-32.png?v=1f6ba21c" sizes="32x32" type="image/png">
+<link rel="icon" href="../assets/logo-192.png?v=1f6ba21c" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=1f6ba21c">
 <meta property="og:image" content="https://robruntools.github.io/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/site.css?v=4db9000d">
-<script src="../assets/site.js?v=4db9000d"></script>
+<link rel="stylesheet" href="../assets/site.css?v=1f6ba21c">
+<script src="../assets/site.js?v=1f6ba21c"></script>
 <style>
 /* Add a run */
 .addbar { padding: 22px; display: grid; gap: 14px; }
@@ -36,8 +36,15 @@
   color: var(--sodium); font-variant-numeric: tabular-nums;
 }
 .each.empty { color: var(--smoke); font-size: 30px; }
-.hint { margin: 0; font-size: 14px; color: var(--smoke); }
-.hint.bad { color: var(--siren); }
+
+/* Server wiped since these runs */
+.wipe-alert {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 16px 20px;
+  border-color: rgba(240, 107, 94, 0.45); background: linear-gradient(90deg, var(--siren-soft), transparent 75%), var(--pier);
+}
+.wipe-alert p { margin: 0; font-weight: 500; max-width: 62ch; }
+.wipe-alert .row { display: flex; flex-wrap: wrap; gap: 10px; }
+.main-bottom { display: grid; }
 
 /* Totals */
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; }
@@ -58,6 +65,7 @@
 .big .cur { color: var(--smoke); font-weight: 700; margin-right: 0.04em; }
 .val { font-family: var(--font-display); font-weight: 700; font-size: 32px; line-height: 1.05; font-variant-numeric: tabular-nums; }
 .val.ok { color: var(--cash); }
+.val small:empty { display: none; }
 .val small { display: block; margin-top: 4px; font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--smoke); }
 .goal-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--rope); }
 .goal-row .stat { flex: 0 0 170px; border-left: 0; padding-right: 8px; }
@@ -128,7 +136,7 @@ tfoot td:first-child { color: var(--receipt); }
 <body>
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../" aria-label="ROB RUN Tools home"><img class="brand-mark" src="../assets/logo-96.png?v=4db9000d" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><img class="brand-mark" src="../assets/logo-96.png?v=1f6ba21c" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
     <nav class="nav-links" aria-label="Main">
       <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
       <a href="../split/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
@@ -153,6 +161,14 @@ tfoot td:first-child { color: var(--receipt); }
     <a href="#wipes">Past wipes</a>
     <a href="#settings">Goal and settings</a>
   </nav>
+
+  <section class="panel wipe-alert" id="wipeAlert" role="status" hidden>
+    <p id="wipeAlertText"></p>
+    <div class="row">
+      <button type="button" class="btn small primary" id="wipeMove">Move them to past wipes</button>
+      <button type="button" class="btn small ghost" id="wipeKeep">Keep them here</button>
+    </div>
+  </section>
 
   <section class="panel addbar" id="add" data-spy aria-label="Add a run">
     <form id="addForm" novalidate>
@@ -194,7 +210,10 @@ tfoot td:first-child { color: var(--receipt); }
     <div class="stat main">
       <div class="main-num">
         <div class="stat-top"><span class="label">Your cut this wipe</span><span class="tag" id="status">No runs</span></div>
-        <span class="big"><span class="cur">$</span><span id="total" aria-live="polite">0</span></span>
+        <div class="main-bottom">
+          <span class="big"><span class="cur">$</span><span id="total" aria-live="polite">0</span></span>
+          <div id="wipeLine" class="wipe-line"></div>
+        </div>
       </div>
       <div id="pile" aria-hidden="true"></div>
     </div>
@@ -391,7 +410,7 @@ tfoot td:first-child { color: var(--receipt); }
       if (sess.length >= 2 && span >= 120000) {
         var earned = 0;
         for (var j = 1; j < sess.length; j++) earned += sess[j].cut;
-        perHour = { rate: earned / (span / 3600000), runs: sess.length };
+        perHour = { rate: earned / (span / 3600000), runs: sess.length, start: sess[0].run.t, end: sess[sess.length - 1].run.t };
       }
     }
 
@@ -430,8 +449,53 @@ tfoot td:first-child { color: var(--receipt); }
     logTable: $("logTable"), logBody: $("logBody"), logFoot: $("logFoot"), emptyLog: $("emptyLog"),
     typePanel: $("best"), typeBody: $("typeBody"), wipePanel: $("wipes"), wipeBody: $("wipeBody"),
     goal: $("goal"), goalHint: $("goalHint"), pay: $("pay"), payHint: $("payHint"), fee: $("fee"), feeHint: $("feeHint"),
-    copyBtn: $("copyBtn"), wipeBtn: $("wipeBtn"), clearBtn: $("clearBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback")
+    copyBtn: $("copyBtn"), wipeBtn: $("wipeBtn"), clearBtn: $("clearBtn"), copyMsg: $("copyMsg"), copyFallback: $("copyFallback"),
+    wipeAlert: $("wipeAlert"), wipeAlertText: $("wipeAlertText"), wipeMove: $("wipeMove"), wipeKeep: $("wipeKeep")
   };
+  var lastC = null;
+  if (window.RR && RR.wipeClock) RR.wipeClock($("wipeLine"), { compact: true });
+
+  // Live bits that change with the clock, not with your input: how long since the last run, session length
+  function ago(ms) { return ms < 60000 ? "just now" : RR.fmtLeft(ms) + " ago"; }
+  function liveBits() {
+    var c = lastC;
+    if (!c || !window.RR || !RR.fmtLeft) return;
+    var now = Date.now(), lastT = c.n ? c.rows[c.n - 1].run.t : 0;
+    var a = el.runCount.querySelector("small");
+    if (a) a.textContent = lastT ? "last one " + ago(now - lastT) : "";
+    var p = el.perHour.querySelector("small");
+    if (p && c.perHour) p.textContent = now - c.perHour.end < SESSION_GAP ? "session " + RR.fmtLeft(now - c.perHour.start) : "last " + c.perHour.runs + " runs";
+  }
+  setInterval(liveBits, 15000);
+
+  // Your server wiped after some of these runs were logged
+  function wipeCheck() {
+    var g = window.RR && RR.wipe ? RR.wipe.get() : null, before = [];
+    if (g && g.last && !state.example && state.wipeSeen !== g.last) before = state.runs.filter(function (r) { return r.t && r.t < g.last; });
+    el.wipeAlert.hidden = !before.length;
+    if (before.length) {
+      var all = before.length === state.runs.length;
+      el.wipeAlertText.textContent = "Your server wiped " + RR.whenSaid(g.last) + ". " +
+        (all ? (before.length === 1 ? "The run here is" : "All " + before.length + " runs here are") : before.length + " of these runs are") + " from before that.";
+    }
+    return { g: g, before: before };
+  }
+  document.addEventListener("rr-wipe", function () { wipeCheck(); });
+
+  // Milestones that get a stamp on the desk
+  var CLUBS = [[1e5, "$100k club"], [2.5e5, "$250k club"], [5e5, "$500k club"], [1e6, "Millionaire"], [2.5e6, "$2.5M club"], [5e6, "$5M club"], [1e7, "$10M club"], [2.5e7, "$25M club"], [5e7, "$50M club"], [1e8, "$100M club"]];
+  var RUN_COUNTS = [10, 25, 50, 100, 250, 500];
+  function milestone(c0, c1) {
+    if (state.goal > 0 && c0.total < state.goal && c1.total >= state.goal) return ["Goal hit", "good"];
+    if (state.pay > 0 && c0.total < state.pay && c1.total >= state.pay) return ["Paid back", "good"];
+    var club = null;
+    CLUBS.forEach(function (k) { if (c0.total < k[0] && c1.total >= k[0]) club = k[1]; });
+    if (club) return [club, ""];
+    if (c1.n >= 3 && c1.rows[c1.n - 1].cut > c0.bestCut) return ["New best run", ""];
+    if (RUN_COUNTS.indexOf(c1.n) >= 0) return [c1.n + " runs", ""];
+    if (c1.n === 1) return ["On the board", ""];
+    return null;
+  }
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function timeOf(t) {
@@ -460,10 +524,10 @@ tfoot td:first-child { color: var(--receipt); }
     else if (state.pay > 0 && c.total >= state.pay) { el.status.textContent = "Paid back"; el.status.className = "tag good"; }
     else { el.status.textContent = Math.floor(pctGoal) + "% of goal"; el.status.className = "tag accent"; }
 
-    el.runCount.textContent = String(c.n);
+    el.runCount.innerHTML = c.n + "<small></small>";
     el.avgCut.textContent = c.n ? fmt.format(c.avg) : "–";
     el.bestRun.innerHTML = c.n ? fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? "<small>" + esc(c.rows[c.bestIdx].run.type) + "</small>" : "") : "–";
-    el.perHour.innerHTML = c.perHour ? fmt.format(c.perHour.rate) + "<small>last " + c.perHour.runs + " runs</small>" : "–";
+    el.perHour.innerHTML = c.perHour ? fmt.format(c.perHour.rate) + "<small></small>" : "–";
 
     el.leftGoal.textContent = c.leftGoal === 0 ? "Done" : fmt.format(c.leftGoal);
     el.leftGoal.classList.toggle("ok", c.leftGoal === 0);
@@ -544,6 +608,9 @@ tfoot td:first-child { color: var(--receipt); }
 
     el.undoWrap.hidden = !lastRemoved;
     if (lastRemoved) el.undoNum.textContent = String(lastRemoved.index + 1);
+    lastC = c;
+    liveBits();
+    wipeCheck();
   }
 
   function updateEach() {
@@ -614,13 +681,18 @@ tfoot td:first-child { color: var(--receipt); }
       return;
     }
     if (state.example) { state.runs = []; state.example = false; state.nextId = 1; }
+    var before = compute(state);
     state.runs.push({ id: state.nextId++, take: n, crew: state.crew, costs: Math.min(costs, n), type: el.type.value.trim().slice(0, 40), t: Date.now() });
     lastRemoved = null;
     el.take.value = ""; el.costs.value = "";
     resetTakeMsg();
     flashLast = true;
     save(); render();
-    if (window.RR) RR.toast("Run added. Your cut: $" + fmt.format(cutOf(state.runs[state.runs.length - 1], state.fee)));
+    var m = milestone(before, lastC);
+    if (window.RR) {
+      RR.toast("Run added. Your cut: $" + fmt.format(cutOf(state.runs[state.runs.length - 1], state.fee)) + (m ? ". " + m[0] + "!" : ""));
+      if (m && RR.stamp) setTimeout(function () { RR.stamp(document.querySelector("#pile .pile-stage"), m[0], m[1]); }, 260);
+    }
     el.take.focus();
   });
 
@@ -669,6 +741,24 @@ tfoot td:first-child { color: var(--receipt); }
     save(); render(); el.take.focus();
   });
 
+  el.wipeMove.addEventListener("click", function () {
+    var w = wipeCheck();
+    if (!w.before.length) return;
+    var c = compute({ runs: w.before, fee: state.fee, goal: state.goal, pay: state.pay });
+    state.wipes.push({ ended: w.g.last, runs: c.n, crewTake: c.crewTake, cut: c.total, best: c.bestCut });
+    state.wipes.sort(function (a, b) { return (a.ended || 0) - (b.ended || 0); });
+    if (state.wipes.length > 20) state.wipes = state.wipes.slice(-20);
+    state.runs = state.runs.filter(function (r) { return !(r.t && r.t < w.g.last); });
+    state.wipeSeen = w.g.last; lastRemoved = null;
+    save(); render();
+    if (window.RR) RR.toast("Moved " + c.n + (c.n === 1 ? " run" : " runs") + " to past wipes");
+  });
+  el.wipeKeep.addEventListener("click", function () {
+    var w = wipeCheck();
+    if (w.g) { state.wipeSeen = w.g.last; save(); }
+    wipeCheck();
+  });
+
   function summaryText() {
     var c = compute(state);
     var lines = ["**ROB RUN split** (" + c.n + (c.n === 1 ? " run" : " runs") + " this wipe)"];
@@ -677,6 +767,8 @@ tfoot td:first-child { color: var(--receipt); }
     if (c.n > 1) lines.push("Best run: " + fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? " (" + c.rows[c.bestIdx].run.type + ")" : ""));
     lines.push("Goal " + fmt.format(state.goal) + ": " + (c.leftGoal === 0 ? "done" + (c.total > state.goal ? " (+" + fmt.format(c.total - state.goal) + ")" : "") : fmt.format(c.leftGoal) + " to go"));
     if (state.pay > 0) lines.push("Pay back " + fmt.format(state.pay) + ": " + (c.leftPay === 0 ? "covered" : fmt.format(c.leftPay) + " to go"));
+    var g = window.RR && RR.wipe ? RR.wipe.get() : null;
+    if (g) lines.push("Federal Raid in " + RR.fmtLeft(g.left));
     return lines.join("\n");
   }
   el.copyBtn.addEventListener("click", function () {

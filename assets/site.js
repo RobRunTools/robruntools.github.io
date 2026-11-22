@@ -143,6 +143,313 @@
     };
   };
 
+  /* ---- Rubber stamp that lands on an element for a milestone ---- */
+  RR.stamp = function (host, text, tone) {
+    if (!host) return;
+    var old = host.querySelector(".stamp");
+    if (old) old.remove();
+    var s = document.createElement("span");
+    s.className = "stamp" + (tone ? " " + tone : "");
+    s.setAttribute("aria-hidden", "true");
+    s.textContent = text;
+    host.appendChild(s);
+    setTimeout(function () { s.classList.add("out"); }, reduce ? 2600 : 2900);
+    setTimeout(function () { s.remove(); }, reduce ? 3000 : 3500);
+  };
+
+  /* ---- Wipe clock ----
+     Every server wipes (the Federal Raid) 7 days after it opened, at the same hour. New servers open every
+     day: EU at 5 PM UTC, East US at 8 PM New York time (Kefir, Nov 4). The wipe time is saved on this device
+     and rolls a week forward each time it passes. */
+  var WEEK = 7 * 864e5, WIPE_KEY = "robrun-wipe-v1";
+  var REGIONS = {
+    eu: { name: "EU", tz: "UTC", hour: 17, when: "5 PM UTC" },
+    us: { name: "East US", tz: "America/New_York", hour: 20, when: "8 PM New York time" }
+  };
+  var tzFmt = {};
+  function tzOffset(ms, tz) { // minutes the zone is ahead of UTC at that instant
+    try {
+      var f = tzFmt[tz] || (tzFmt[tz] = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric" }));
+      var p = {};
+      f.formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+      return (Date.UTC(+p.year, p.month - 1, +p.day, (+p.hour) % 24, +p.minute, +p.second) - Math.floor(ms / 1000) * 1000) / 6e4;
+    } catch (e) { return tz === "UTC" ? 0 : -300; }
+  }
+  function zoned(y, m, d, h, tz) { // instant of a wall-clock hour in a time zone
+    var guess = Date.UTC(y, m, d, h), t = guess - tzOffset(guess, tz) * 6e4;
+    return guess - tzOffset(t, tz) * 6e4;
+  }
+  function openings(region, now) { // newest first, from tomorrow back 8 days
+    var r = REGIONS[region], wall = new Date(now + tzOffset(now, r.tz) * 6e4), out = [];
+    for (var k = -1; k <= 8; k++) out.push(zoned(wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate() - k, r.hour, r.tz));
+    return out;
+  }
+  function two(n) { return (n < 10 ? "0" : "") + n; }
+  function parts(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    return { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+  }
+  RR.fmtLeft = function (ms) {
+    var p = parts(ms);
+    if (p.d) return p.d + "d " + p.h + "h";
+    if (p.h) return p.h + "h " + p.m + "m";
+    return p.m ? p.m + "m" : "under a minute";
+  };
+  RR.fmtClock = function (ms) {
+    var p = parts(ms);
+    return (p.d ? p.d + "d " : "") + two(p.h) + ":" + two(p.m) + ":" + two(p.s);
+  };
+  RR.whenLocal = function (t, now) {
+    var d = new Date(t), n = new Date(now || Date.now());
+    var time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    var diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5);
+    var day = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : diff === -1 ? "Yesterday" : d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    return day + ", " + time;
+  };
+  RR.whenSaid = function (t, now) { // for the middle of a sentence: "yesterday at 7:00 PM", "on Thu, Nov 19 at 7:00 PM"
+    var w = RR.whenLocal(t, now), day = w.slice(0, w.lastIndexOf(", ")), time = w.slice(w.lastIndexOf(", ") + 2);
+    return (/^(Today|Tomorrow|Yesterday)$/.test(day) ? day.toLowerCase() : "on " + day) + " at " + time;
+  };
+  function timeOnly(t) { return new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+
+  RR.wipe = {
+    WEEK: WEEK,
+    regions: REGIONS,
+    nextOpen: function (region, now) {
+      now = now || Date.now();
+      return Math.min.apply(null, openings(region, now).filter(function (t) { return t > now; }));
+    },
+    recentOpens: function (region, now) {
+      now = now || Date.now();
+      return openings(region, now).filter(function (t) { return t <= now && t > now - WEEK; });
+    },
+    load: function () {
+      try { var s = JSON.parse(localStorage.getItem(WIPE_KEY) || "null"); return s && s.at > 0 && isFinite(s.at) ? s : null; } catch (e) { return null; }
+    },
+    get: function (now) {
+      now = now || Date.now();
+      var s = RR.wipe.load();
+      if (!s) return null;
+      var at = s.at, last = null;
+      if (at <= now) { at += (Math.floor((now - at) / WEEK) + 1) * WEEK; last = at - WEEK; }
+      return { at: at, last: last, left: at - now, how: s.how, region: s.region };
+    },
+    set: function (at, how, region) {
+      try { localStorage.setItem(WIPE_KEY, JSON.stringify({ at: at, how: how, region: region || null, set: Date.now() })); } catch (e) { /* ignore */ }
+      wipeChanged();
+    },
+    clear: function () {
+      try { localStorage.removeItem(WIPE_KEY); } catch (e) { /* ignore */ }
+      wipeChanged();
+    }
+  };
+
+  var clocks = [], tickTimer = null, lastAt;
+  function wipeChanged() {
+    var g = RR.wipe.get();
+    lastAt = g ? g.at : null;
+    clocks.forEach(function (c) { c.render(); });
+    document.dispatchEvent(new CustomEvent("rr-wipe"));
+  }
+  function tickAll() {
+    var now = Date.now(), g = RR.wipe.get(now);
+    if (g && lastAt && g.at !== lastAt && g.last) {
+      lastAt = g.at;
+      clocks.forEach(function (c) { c.render(); });
+      document.dispatchEvent(new CustomEvent("rr-wipe", { detail: { wiped: g.last } }));
+      RR.toast("Federal Raid. Your server just wiped.");
+      return;
+    }
+    lastAt = g ? g.at : null;
+    clocks.forEach(function (c) { c.tick(now, g); });
+  }
+  window.addEventListener("storage", function (e) { if (e.key === WIPE_KEY) wipeChanged(); });
+
+  var sheet = null, uid = 0;
+  function buildSetter(onDone, opts) {
+    opts = opts || {};
+    var id = "ws" + (++uid), g = RR.wipe.get();
+    var f = document.createElement("form");
+    f.className = "setter";
+    f.noValidate = true;
+    f.innerHTML =
+      '<div class="seg set-mode" role="group" aria-label="How to set it">' +
+        '<button type="button" data-mode="timer">Time left in game</button><button type="button" data-mode="open">When it opened</button></div>' +
+      '<div class="set-pane" data-pane="timer">' +
+        '<div class="dhm">' +
+          '<div class="field"><label for="' + id + 'd">Days</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'd" name="d" placeholder="0" maxlength="2"></div>' +
+          '<div class="field"><label for="' + id + 'h">Hours</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'h" name="h" placeholder="0" maxlength="2"></div>' +
+          '<div class="field"><label for="' + id + 'm">Minutes</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'm" name="m" placeholder="0" maxlength="2"></div>' +
+        '</div>' +
+        '<p class="hint">Copy the time left from the wipe timer on your server.</p>' +
+      '</div>' +
+      '<div class="set-pane" data-pane="open" hidden>' +
+        '<div class="seg set-region" role="group" aria-label="Region"><button type="button" data-region="us">East US</button><button type="button" data-region="eu">EU</button></div>' +
+        '<div class="field"><label for="' + id + 'o">Your server opened</label><select id="' + id + 'o" name="open"></select></div>' +
+        '<p class="hint set-region-hint"></p>' +
+      '</div>' +
+      '<p class="hint bad set-err" role="alert" hidden></p>' +
+      '<div class="set-acts"><button type="submit" class="btn primary">Start the clock</button>' +
+        (opts.cancel ? '<button type="button" class="btn ghost" data-act="cancel">Cancel</button>' : "") +
+        (g ? '<button type="button" class="btn ghost" data-act="off">Turn off clock</button>' : "") + "</div>";
+    var mode = g && g.how === "open" ? "open" : "timer", region = g && g.region === "eu" ? "eu" : "us";
+    var err = f.querySelector(".set-err"), sel = f.querySelector("select");
+    function fillOpens() {
+      var now = Date.now();
+      sel.innerHTML = RR.wipe.recentOpens(region, now).map(function (t) {
+        return '<option value="' + t + '">' + RR.whenLocal(t, now) + " (wipes in " + RR.fmtLeft(t + WEEK - now) + ")</option>";
+      }).join("");
+      var r = REGIONS[region], next = RR.wipe.nextOpen(region, now);
+      f.querySelector(".set-region-hint").textContent = r.name + " servers open every day at " + r.when + ", which is " + timeOnly(next) + " for you.";
+    }
+    function show() {
+      [].forEach.call(f.querySelectorAll(".set-mode button"), function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === mode)); });
+      [].forEach.call(f.querySelectorAll(".set-region button"), function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
+      f.querySelector('[data-pane="timer"]').hidden = mode !== "timer";
+      f.querySelector('[data-pane="open"]').hidden = mode !== "open";
+      if (mode === "open") fillOpens();
+      err.hidden = true;
+    }
+    f.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) return;
+      if (b.dataset.mode) { mode = b.dataset.mode; show(); }
+      else if (b.dataset.region) { region = b.dataset.region; show(); }
+      else if (b.dataset.act === "cancel") onDone(false);
+      else if (b.dataset.act === "off") { RR.wipe.clear(); RR.toast("Wipe clock turned off"); onDone(true); }
+    });
+    f.addEventListener("input", function (e) {
+      if (e.target.tagName === "INPUT") e.target.value = e.target.value.replace(/\D+/g, "");
+      err.hidden = true;
+    });
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var at;
+      if (mode === "timer") {
+        var d = +f.elements.d.value || 0, h = +f.elements.h.value || 0, m = +f.elements.m.value || 0;
+        var ms = ((d * 24 + h) * 60 + m) * 6e4;
+        if (h > 23 || m > 59) { err.textContent = "Hours go up to 23 and minutes up to 59."; err.hidden = false; return; }
+        if (!(ms > 0)) { err.textContent = "Put in the time left, like 2 days 5 hours."; err.hidden = false; f.elements.d.focus(); return; }
+        if (ms > WEEK + 36e5) { err.textContent = "Servers only last 7 days, so the timer can't be longer than that."; err.hidden = false; return; }
+        at = Date.now() + ms;
+      } else {
+        at = Number(sel.value) + WEEK;
+        if (!(at > Date.now())) { err.textContent = "Pick the day your server opened."; err.hidden = false; return; }
+      }
+      RR.wipe.set(at, mode, mode === "open" ? region : null);
+      RR.toast("Wipe clock set: " + RR.whenLocal(at));
+      onDone(true);
+    });
+    show();
+    return f;
+  }
+  function closeSheet() { if (!sheet) return; if (sheet.close) sheet.close(); else sheet.removeAttribute("open"); }
+  RR.openWipeSetter = function () {
+    if (!sheet) {
+      sheet = document.createElement("dialog");
+      sheet.className = "sheet";
+      sheet.setAttribute("aria-labelledby", "sheetTitle");
+      document.body.appendChild(sheet);
+      sheet.addEventListener("click", function (e) { if (e.target === sheet) closeSheet(); });
+    }
+    sheet.innerHTML = '<h2 class="panel-title" id="sheetTitle">Set your wipe clock</h2><p class="sheet-sub">Every server wipes 7 days after it opened, at the same hour.</p>';
+    sheet.appendChild(buildSetter(closeSheet, { cancel: true }));
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute("open", "");
+    var first = sheet.querySelector('input, select');
+    if (first && first.offsetParent) first.focus();
+  };
+
+  /* RR.wipeClock(el, { compact, cut }) mounts the countdown. cut() returns your cut so the last-day
+     warning can say how much is at stake. */
+  RR.wipeClock = function (root, opts) {
+    opts = opts || {};
+    var compact = !!opts.compact, refs = {}, srvNext = {};
+    function cutLine(g) {
+      var cut = opts.cut ? opts.cut() : 0;
+      var money = cut > 0 ? "$" + Math.round(cut).toLocaleString("en-US") : "";
+      if (g.left < 36e5) return money ? "Under an hour left. Spend your " + money + " cut now." : "Under an hour left. Spend everything now.";
+      return money ? "Under a day left. Spend your " + money + " cut before the feds take it." : "Under a day left. Cash in the bank goes in the raid, so spend it.";
+    }
+    function render() {
+      var now = Date.now(), g = RR.wipe.get(now);
+      root.classList.toggle("is-set", !!g);
+      if (compact) {
+        root.className = "wipe-line" + (g ? " is-set" : "");
+        root.innerHTML = g
+          ? '<span class="wl-dot" aria-hidden="true"></span><span class="wl-text">Federal Raid in <b class="wl-left"></b></span><button type="button" class="linkish" data-act="set">Change</button>'
+          : '<span class="wl-dot" aria-hidden="true"></span><span class="wl-text">When does your server wipe?</span><button type="button" class="linkish" data-act="set">Set the wipe clock</button>';
+      } else {
+        root.classList.add("clock");
+        var servers = '<div class="clock-servers"><span class="label">New servers open</span>' +
+          ["us", "eu"].map(function (r) { return '<div class="srv" data-r="' + r + '"><b>' + REGIONS[r].name + '</b><span class="srv-left"></span><small class="srv-at"></small></div>'; }).join("") +
+          '<p class="srv-note">Fresh servers have a full 7 days on the clock.</p></div>';
+        if (g) {
+          root.innerHTML = '<div class="clock-main">' +
+            '<div class="clock-head"><span class="label">Federal Raid on your server</span><button type="button" class="linkish" data-act="set">Change</button></div>' +
+            '<div class="clock-time" role="timer"></div>' +
+            '<div class="clock-fuse" aria-hidden="true"><i></i><b class="spark"></b></div>' +
+            '<div class="clock-meta"><span class="clock-day"></span><span class="clock-when"></span></div>' +
+            '<p class="clock-msg" hidden></p></div>' + servers;
+        } else {
+          root.innerHTML = '<div class="clock-main"><span class="label">Wipe clock</span>' +
+            '<h2 class="clock-ask">When does your server wipe?</h2>' +
+            '<p class="clock-sub">Set it once and it counts down here and on the split page, and warns you on the last day.</p>' +
+            '<div class="clock-setter"></div></div>' + servers;
+          root.querySelector(".clock-setter").appendChild(buildSetter(function () { /* render runs on change */ }));
+        }
+      }
+      ["wl-left", "clock-time", "clock-fuse", "clock-day", "clock-when", "clock-msg"].forEach(function (k) { refs[k] = root.querySelector("." + k); });
+      srvNext = {};
+      api.tick(now, g, true);
+    }
+    var api = {
+      render: render,
+      tick: function (now, g, first) {
+        if (g) {
+          var soon = g.left < 864e5, urgent = g.left < 36e5;
+          root.classList.toggle("soon", soon);
+          root.classList.toggle("urgent", urgent);
+          if (compact) {
+            refs["wl-left"].textContent = RR.fmtClock(g.left);
+          } else {
+            var p = parts(g.left);
+            var html = (p.d ? "<b>" + p.d + "</b><i>d</i>" : "") + "<b>" + two(p.h) + "</b><i>h</i><b>" + two(p.m) + "</b><i>m</i><b>" + two(p.s) + "</b><i>s</i>";
+            if (refs["clock-time"].innerHTML !== html) refs["clock-time"].innerHTML = html;
+            refs["clock-time"].setAttribute("aria-label", "Wipes in " + RR.fmtLeft(g.left));
+            var w = Math.max(0, Math.min(100, g.left / WEEK * 100)).toFixed(3) + "%";
+            refs["clock-fuse"].firstChild.style.width = w;
+            refs["clock-fuse"].lastChild.style.left = w;
+            refs["clock-day"].textContent = "Day " + Math.min(7, Math.max(1, Math.floor((WEEK - g.left) / 864e5) + 1)) + " of 7";
+            var ws = "Wipes " + RR.whenSaid(g.at, now);
+            if (refs["clock-when"].textContent !== ws) refs["clock-when"].textContent = ws;
+            var msg = soon ? cutLine(g) : (g.last && now - g.last < 864e5 ? "Your server wiped " + RR.whenSaid(g.last, now) + ". The clock moved on to the next one." : "");
+            refs["clock-msg"].hidden = !msg;
+            if (refs["clock-msg"].textContent !== msg) refs["clock-msg"].textContent = msg;
+          }
+        } else {
+          root.classList.remove("soon", "urgent");
+        }
+        if (!compact) {
+          ["us", "eu"].forEach(function (r) {
+            if (!srvNext[r] || srvNext[r] <= now) srvNext[r] = RR.wipe.nextOpen(r, now);
+            var row = root.querySelector('.srv[data-r="' + r + '"]');
+            if (!row) return;
+            row.querySelector(".srv-left").textContent = "in " + RR.fmtLeft(srvNext[r] - now);
+            row.querySelector(".srv-at").textContent = RR.whenLocal(srvNext[r], now);
+          });
+        }
+      }
+    };
+    root.addEventListener("click", function (e) {
+      var b = e.target.closest('[data-act="set"]');
+      if (b) RR.openWipeSetter();
+    });
+    clocks.push(api);
+    render();
+    if (!tickTimer) { var g0 = RR.wipe.get(); lastAt = g0 ? g0.at : null; tickTimer = setInterval(tickAll, 1000); }
+    return api;
+  };
+
   /* ---- Smooth scroll to an element, clearing the sticky bars ---- */
   RR.scrollTo = function (target) {
     if (!target) return;
