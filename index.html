@@ -8,15 +8,15 @@
 <meta property="og:title" content="ROB RUN Tools">
 <meta property="og:description" content="Split the take with your crew, plan your unlocks and check what the fence pays.">
 <meta name="theme-color" content="#12212c">
-<link rel="icon" href="assets/favicon-32.png?v=1f6ba21c" sizes="32x32" type="image/png">
-<link rel="icon" href="assets/logo-192.png?v=1f6ba21c" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=1f6ba21c">
+<link rel="icon" href="assets/favicon-32.png?v=2c8b6ae2" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/logo-192.png?v=2c8b6ae2" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=2c8b6ae2">
 <meta property="og:image" content="https://robruntools.github.io/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/site.css?v=1f6ba21c">
-<script src="assets/site.js?v=1f6ba21c"></script>
+<link rel="stylesheet" href="assets/site.css?v=2c8b6ae2">
+<script src="assets/site.js?v=2c8b6ae2"></script>
 <style>
 .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 18px 40px; padding: 8px 0 4px; }
 .hero-text { display: grid; gap: 18px; }
@@ -24,6 +24,12 @@
 .hero h1 { font-size: clamp(64px, 12vw, 148px); line-height: 0.84; letter-spacing: -0.01em; }
 .hero h1 span { display: block; color: var(--sodium); }
 .hero .sub { font-size: 19px; max-width: 46ch; }
+.hero-logo { transition: transform 500ms var(--ease); }
+.hero-logo:hover { transform: rotate(-3deg) scale(1.02); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-logo { animation: logo-in 950ms 180ms cubic-bezier(0.2, 1.25, 0.35, 1) backwards; }
+}
+@keyframes logo-in { from { opacity: 0; transform: translateY(-18px) rotate(-8deg) scale(0.94); } }
 
 /* Your cut, pulled from the split calculator on this device */
 .wallet { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 500px); gap: 18px 32px; align-items: end; padding: 26px 26px 24px; overflow: hidden; }
@@ -78,7 +84,7 @@
 <body>
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="./" aria-label="ROB RUN Tools home"><img class="brand-mark" src="assets/logo-96.png?v=1f6ba21c" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
+    <a class="brand" href="./" aria-label="ROB RUN Tools home"><img class="brand-mark" src="assets/logo-96.png?v=2c8b6ae2" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
     <nav class="nav-links" aria-label="Main">
       <a href="./" class="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
       <a href="split/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
@@ -95,7 +101,7 @@
       <h1>ROB RUN <span>Tools</span></h1>
       <p class="sub">Split the take with your crew, plan what to unlock next, and check what the fence pays before you sell.</p>
     </div>
-    <img class="hero-logo" src="assets/logo.png?v=1f6ba21c" width="250" height="250" alt="ROB RUN Tools logo: a masked runner carrying a wrench">
+    <img class="hero-logo" src="assets/logo.png?v=2c8b6ae2" width="250" height="250" alt="ROB RUN Tools logo: a masked runner carrying a wrench">
   </header>
 
   <section class="panel clock" id="clock" aria-label="Wipe clock"></section>
@@ -124,7 +130,7 @@
       <div>
         <div class="tool-name">Unlock tree</div>
         <p class="tool-desc">Larry's Shipments laid out like the game. Pick what you want and it adds up every unlock on the way plus the Black Market price.</p>
-        <span class="tag tool-live" id="liveTree">172 shipments</span>
+        <span class="tag tool-live" id="liveTree">171 shipments</span>
       </div>
       <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
     </a>
@@ -140,7 +146,7 @@
       <div>
         <div class="tool-name">FAQ</div>
         <p class="tool-desc">Wipes, keeping your cash, what you lose when you die, where to sell, cops, and what each patch changed.</p>
-        <span class="tag tool-live">Checked November 21</span>
+        <span class="tag tool-live">Checked November 22</span>
       </div>
       <span class="go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
     </a>
@@ -150,7 +156,7 @@
 <footer class="foot">
   <div class="foot-in">
     <p>Your runs, haul and plan are saved on this device only.</p>
-    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="faq/#sources">Sources</a></p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 22, 2026. <a href="faq/#sources">Sources</a></p>
   </div>
 </footer>
 

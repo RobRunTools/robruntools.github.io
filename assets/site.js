@@ -42,6 +42,44 @@
   }
   RR.flash = function (el) { restartClass(el, "flash"); };
   RR.pop = function (el) { restartClass(el, "pop"); };
+  RR.tick = function (el) { restartClass(el, "tick"); };
+
+  /* ---- Sliding thumb: the orange pill glides to whichever option is on (toggles, section bar) ---- */
+  var thumbs = [];
+  function addThumb(box, itemSel, isOn, cls) {
+    if (box._rrThumb) return;
+    var t = document.createElement("span");
+    t.className = cls;
+    t.setAttribute("aria-hidden", "true");
+    box.insertBefore(t, box.firstChild);
+    box._rrThumb = t;
+    var placed = false;
+    function update() {
+      var on = null;
+      [].forEach.call(box.querySelectorAll(itemSel), function (b) { if (!on && isOn(b) && !b.hidden && b.offsetWidth) on = b; });
+      if (!on) { box.classList.remove("thumb-on"); placed = false; return; }
+      if (!placed) t.style.transition = "none";
+      t.style.width = on.offsetWidth + "px";
+      t.style.height = on.offsetHeight + "px";
+      t.style.transform = "translate(" + on.offsetLeft + "px, " + on.offsetTop + "px)";
+      if (!placed) { void t.offsetWidth; t.style.transition = ""; placed = true; }
+      box.classList.add("thumb-on");
+    }
+    if (window.MutationObserver) new MutationObserver(update).observe(box, { attributes: true, subtree: true, attributeFilter: ["aria-pressed", "aria-current", "hidden"] });
+    if (window.ResizeObserver) new ResizeObserver(update).observe(box);
+    thumbs.push({ box: box, update: update });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
+    update();
+  }
+  function scanThumbs(root) {
+    [].forEach.call((root || document).querySelectorAll(".seg"), function (sg) {
+      addThumb(sg, "button", function (b) { return b.getAttribute("aria-pressed") === "true"; }, "seg-thumb");
+    });
+  }
+  window.addEventListener("resize", function () {
+    thumbs = thumbs.filter(function (x) { return x.box.isConnected; });
+    thumbs.forEach(function (x) { x.update(); });
+  });
 
   /* ---- Count-up for money figures ---- */
   RR.countUp = function (el, to, opts) {
@@ -158,9 +196,10 @@
   };
 
   /* ---- Wipe clock ----
-     Every server wipes (the Federal Raid) 7 days after it opened, at the same hour. New servers open every
-     day: EU at 5 PM UTC, East US at 8 PM New York time (Kefir, Nov 4). The wipe time is saved on this device
-     and rolls a week forward each time it passes. */
+     Every server (the game calls them states) is raided 7 days after it opened, then it closes and you pick a
+     new state from prison. The game shows SERVER LIFETIME (time since it opened) in the main menu and a
+     "Federal raid in" countdown. One fresh server opens daily per region: EU at 5 PM UTC, East US at 8 PM
+     New York time (Kefir, Nov 4), plus extras whenever servers fill up. Saved on this device only. */
   var WEEK = 7 * 864e5, WIPE_KEY = "robrun-wipe-v1";
   var REGIONS = {
     eu: { name: "EU", tz: "UTC", hour: 17, when: "5 PM UTC" },
@@ -230,9 +269,8 @@
       now = now || Date.now();
       var s = RR.wipe.load();
       if (!s) return null;
-      var at = s.at, last = null;
-      if (at <= now) { at += (Math.floor((now - at) / WEEK) + 1) * WEEK; last = at - WEEK; }
-      return { at: at, last: last, left: at - now, how: s.how, region: s.region };
+      var raided = s.at <= now;
+      return { at: s.at, last: raided ? s.at : null, raided: raided, left: Math.max(0, s.at - now), how: s.how, region: s.region };
     },
     set: function (at, how, region) {
       try { localStorage.setItem(WIPE_KEY, JSON.stringify({ at: at, how: how, region: region || null, set: Date.now() })); } catch (e) { /* ignore */ }
@@ -244,22 +282,24 @@
     }
   };
 
-  var clocks = [], tickTimer = null, lastAt;
+  var clocks = [], tickTimer = null, lastAt, wasRaided = null;
   function wipeChanged() {
     var g = RR.wipe.get();
     lastAt = g ? g.at : null;
+    wasRaided = g ? g.raided : null;
     clocks.forEach(function (c) { c.render(); });
     document.dispatchEvent(new CustomEvent("rr-wipe"));
   }
   function tickAll() {
-    var now = Date.now(), g = RR.wipe.get(now);
-    if (g && lastAt && g.at !== lastAt && g.last) {
-      lastAt = g.at;
+    var now = Date.now(), g = RR.wipe.get(now), raided = !!(g && g.raided);
+    if (g && wasRaided === false && raided) {
+      wasRaided = true;
       clocks.forEach(function (c) { c.render(); });
-      document.dispatchEvent(new CustomEvent("rr-wipe", { detail: { wiped: g.last } }));
-      RR.toast("Federal Raid. Your server just wiped.");
+      document.dispatchEvent(new CustomEvent("rr-wipe", { detail: { wiped: g.at } }));
+      RR.toast("Federal Raid. Your server was just raided.");
       return;
     }
+    wasRaided = g ? raided : null;
     lastAt = g ? g.at : null;
     clocks.forEach(function (c) { c.tick(now, g); });
   }
@@ -274,14 +314,14 @@
     f.noValidate = true;
     f.innerHTML =
       '<div class="seg set-mode" role="group" aria-label="How to set it">' +
-        '<button type="button" data-mode="timer">Time left in game</button><button type="button" data-mode="open">When it opened</button></div>' +
-      '<div class="set-pane" data-pane="timer">' +
+        '<button type="button" data-mode="lifetime">Server lifetime</button><button type="button" data-mode="timer">Time left</button><button type="button" data-mode="open">Opened at</button></div>' +
+      '<div class="set-pane" data-pane="dhm">' +
         '<div class="dhm">' +
           '<div class="field"><label for="' + id + 'd">Days</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'd" name="d" placeholder="0" maxlength="2"></div>' +
           '<div class="field"><label for="' + id + 'h">Hours</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'h" name="h" placeholder="0" maxlength="2"></div>' +
           '<div class="field"><label for="' + id + 'm">Minutes</label><input type="text" inputmode="numeric" autocomplete="off" id="' + id + 'm" name="m" placeholder="0" maxlength="2"></div>' +
         '</div>' +
-        '<p class="hint">Copy the time left from the wipe timer on your server.</p>' +
+        '<p class="hint set-dhm-hint"></p>' +
       '</div>' +
       '<div class="set-pane" data-pane="open" hidden>' +
         '<div class="seg set-region" role="group" aria-label="Region"><button type="button" data-region="us">East US</button><button type="button" data-region="eu">EU</button></div>' +
@@ -292,7 +332,7 @@
       '<div class="set-acts"><button type="submit" class="btn primary">Start the clock</button>' +
         (opts.cancel ? '<button type="button" class="btn ghost" data-act="cancel">Cancel</button>' : "") +
         (g ? '<button type="button" class="btn ghost" data-act="off">Turn off clock</button>' : "") + "</div>";
-    var mode = g && g.how === "open" ? "open" : "timer", region = g && g.region === "eu" ? "eu" : "us";
+    var mode = g && (g.how === "open" || g.how === "timer") ? g.how : "lifetime", region = g && g.region === "eu" ? "eu" : "us";
     var err = f.querySelector(".set-err"), sel = f.querySelector("select");
     function fillOpens() {
       var now = Date.now();
@@ -300,13 +340,16 @@
         return '<option value="' + t + '">' + RR.whenLocal(t, now) + " (wipes in " + RR.fmtLeft(t + WEEK - now) + ")</option>";
       }).join("");
       var r = REGIONS[region], next = RR.wipe.nextOpen(region, now);
-      f.querySelector(".set-region-hint").textContent = r.name + " servers open every day at " + r.when + ", which is " + timeOnly(next) + " for you.";
+      f.querySelector(".set-region-hint").textContent = "The daily " + r.name + " server opens at " + r.when + " (" + timeOnly(next) + " for you). Most servers open at other times when the others fill up, so only use this if your crew joined a fresh daily one.";
     }
     function show() {
       [].forEach.call(f.querySelectorAll(".set-mode button"), function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === mode)); });
       [].forEach.call(f.querySelectorAll(".set-region button"), function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
-      f.querySelector('[data-pane="timer"]').hidden = mode !== "timer";
+      f.querySelector('[data-pane="dhm"]').hidden = mode === "open";
       f.querySelector('[data-pane="open"]').hidden = mode !== "open";
+      f.querySelector(".set-dhm-hint").textContent = mode === "lifetime"
+        ? "Main menu, bottom right above RUN. It counts up from when your server opened, like 3D 19H."
+        : "From the Federal raid in countdown in game.";
       if (mode === "open") fillOpens();
       err.hidden = true;
     }
@@ -325,13 +368,15 @@
     f.addEventListener("submit", function (e) {
       e.preventDefault();
       var at;
-      if (mode === "timer") {
+      if (mode !== "open") {
         var d = +f.elements.d.value || 0, h = +f.elements.h.value || 0, m = +f.elements.m.value || 0;
         var ms = ((d * 24 + h) * 60 + m) * 6e4;
         if (h > 23 || m > 59) { err.textContent = "Hours go up to 23 and minutes up to 59."; err.hidden = false; return; }
-        if (!(ms > 0)) { err.textContent = "Put in the time left, like 2 days 5 hours."; err.hidden = false; f.elements.d.focus(); return; }
-        if (ms > WEEK + 36e5) { err.textContent = "Servers only last 7 days, so the timer can't be longer than that."; err.hidden = false; return; }
-        at = Date.now() + ms;
+        if (mode === "timer" && !(ms > 0)) { err.textContent = "Put in the time left, like 2 days 5 hours."; err.hidden = false; f.elements.d.focus(); return; }
+        if (mode === "lifetime" && !f.elements.d.value && !f.elements.h.value && !f.elements.m.value) { err.textContent = "Put in your Server lifetime, like 3 days 19 hours."; err.hidden = false; f.elements.d.focus(); return; }
+        if (mode === "lifetime" && ms >= WEEK) { err.textContent = "At 7 days the server gets raided, so the lifetime has to be under that."; err.hidden = false; return; }
+        if (ms > WEEK) { err.textContent = "Servers only last 7 days, so the timer can't be longer than that."; err.hidden = false; return; }
+        at = mode === "lifetime" ? Date.now() + WEEK - ms : Date.now() + ms;
       } else {
         at = Number(sel.value) + WEEK;
         if (!(at > Date.now())) { err.textContent = "Pick the day your server opened."; err.hidden = false; return; }
@@ -375,15 +420,24 @@
       root.classList.toggle("is-set", !!g);
       if (compact) {
         root.className = "wipe-line" + (g ? " is-set" : "");
-        root.innerHTML = g
+        root.innerHTML = g && g.raided
+          ? '<span class="wl-dot" aria-hidden="true"></span><span class="wl-text">Your server was raided ' + RR.whenSaid(g.at, now) + '.</span><button type="button" class="linkish" data-act="set">Set the clock for your new one</button>'
+          : g
           ? '<span class="wl-dot" aria-hidden="true"></span><span class="wl-text">Federal Raid in <b class="wl-left"></b></span><button type="button" class="linkish" data-act="set">Change</button>'
           : '<span class="wl-dot" aria-hidden="true"></span><span class="wl-text">When does your server wipe?</span><button type="button" class="linkish" data-act="set">Set the wipe clock</button>';
+        root.classList.toggle("raided", !!(g && g.raided));
       } else {
         root.classList.add("clock");
         var servers = '<div class="clock-servers"><span class="label">New servers open</span>' +
           ["us", "eu"].map(function (r) { return '<div class="srv" data-r="' + r + '"><b>' + REGIONS[r].name + '</b><span class="srv-left"></span><small class="srv-at"></small></div>'; }).join("") +
-          '<p class="srv-note">Fresh servers have a full 7 days on the clock.</p></div>';
-        if (g) {
+          '<p class="srv-note">A fresh server gives you the full 7 days. Extra ones open whenever the others fill up.</p></div>';
+        if (g && g.raided) {
+          root.innerHTML = '<div class="clock-main">' +
+            '<div class="clock-head"><span class="label">Federal Raid on your server</span></div>' +
+            '<div class="clock-raided">Raided</div>' +
+            '<p class="clock-sub">Your server was raided ' + RR.whenSaid(g.at, now) + ' and closed. Escape your cell, pick a new state, then set the clock for it.</p>' +
+            '<div class="set-acts"><button type="button" class="btn primary" data-act="set">Set the clock for my new server</button></div></div>' + servers;
+        } else if (g) {
           root.innerHTML = '<div class="clock-main">' +
             '<div class="clock-head"><span class="label">Federal Raid on your server</span><button type="button" class="linkish" data-act="set">Change</button></div>' +
             '<div class="clock-time" role="timer"></div>' +
@@ -405,16 +459,29 @@
     var api = {
       render: render,
       tick: function (now, g, first) {
-        if (g) {
+        if (g && g.raided) {
+          root.classList.add("soon");
+          root.classList.remove("urgent");
+        } else if (g) {
           var soon = g.left < 864e5, urgent = g.left < 36e5;
           root.classList.toggle("soon", soon);
           root.classList.toggle("urgent", urgent);
           if (compact) {
             refs["wl-left"].textContent = RR.fmtClock(g.left);
           } else {
-            var p = parts(g.left);
-            var html = (p.d ? "<b>" + p.d + "</b><i>d</i>" : "") + "<b>" + two(p.h) + "</b><i>h</i><b>" + two(p.m) + "</b><i>m</i><b>" + two(p.s) + "</b><i>s</i>";
-            if (refs["clock-time"].innerHTML !== html) refs["clock-time"].innerHTML = html;
+            var p = parts(g.left), ct = refs["clock-time"];
+            if (!ct._b) {
+              ct.innerHTML = '<span class="cg"><b></b><i>d</i></span><span class="cg"><b></b><i>h</i></span><span class="cg"><b></b><i>m</i></span><span class="cg"><b></b><i>s</i></span>';
+              ct._b = ct.querySelectorAll("b");
+            }
+            ct._b[0].parentNode.hidden = !p.d;
+            [String(p.d), two(p.h), two(p.m), two(p.s)].forEach(function (v, i) {
+              var b = ct._b[i];
+              if (b.textContent === v) return;
+              var had = b.textContent !== "";
+              b.textContent = v;
+              if (had && i < 3 && !first) restartClass(b, "roll");
+            });
             refs["clock-time"].setAttribute("aria-label", "Wipes in " + RR.fmtLeft(g.left));
             var w = Math.max(0, Math.min(100, g.left / WEEK * 100)).toFixed(3) + "%";
             refs["clock-fuse"].firstChild.style.width = w;
@@ -422,7 +489,7 @@
             refs["clock-day"].textContent = "Day " + Math.min(7, Math.max(1, Math.floor((WEEK - g.left) / 864e5) + 1)) + " of 7";
             var ws = "Wipes " + RR.whenSaid(g.at, now);
             if (refs["clock-when"].textContent !== ws) refs["clock-when"].textContent = ws;
-            var msg = soon ? cutLine(g) : (g.last && now - g.last < 864e5 ? "Your server wiped " + RR.whenSaid(g.last, now) + ". The clock moved on to the next one." : "");
+            var msg = soon ? cutLine(g) : "";
             refs["clock-msg"].hidden = !msg;
             if (refs["clock-msg"].textContent !== msg) refs["clock-msg"].textContent = msg;
           }
@@ -446,7 +513,7 @@
     });
     clocks.push(api);
     render();
-    if (!tickTimer) { var g0 = RR.wipe.get(); lastAt = g0 ? g0.at : null; tickTimer = setInterval(tickAll, 1000); }
+    if (!tickTimer) { var g0 = RR.wipe.get(); lastAt = g0 ? g0.at : null; wasRaided = g0 ? g0.raided : null; tickTimer = setInterval(tickAll, 1000); }
     return api;
   };
 
@@ -632,6 +699,17 @@
 
   function init() {
     initNav(); initJump(); initTop(); initSlash();
+    scanThumbs();
+    var jb = document.querySelector(".jump");
+    if (jb) addThumb(jb, 'a[href^="#"]', function (a) { return a.getAttribute("aria-current") === "true"; }, "jump-thumb");
+    if (window.MutationObserver) {
+      var pend = false;
+      new MutationObserver(function (recs) {
+        if (pend) return;
+        for (var i = 0; i < recs.length; i++) if (recs[i].addedNodes.length) { pend = true; break; }
+        if (pend) requestAnimationFrame(function () { pend = false; scanThumbs(); });
+      }).observe(document.body, { childList: true, subtree: true });
+    }
     if (location.protocol.indexOf("http") === 0) setTimeout(checkFresh, 1500);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

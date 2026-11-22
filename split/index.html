@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Split Calculator · ROB RUN Tools</title>
+<title>Split calculator – ROB RUN Tools</title>
 <meta name="description" content="Split each ROB RUN take with your crew, track your cut, averages and cash per hour across the wipe.">
 <meta property="og:title" content="ROB RUN Split Calculator">
 <meta property="og:description" content="Split each run with your crew. Tracks your cut, averages, best run and cash per hour.">
 <meta name="theme-color" content="#12212c">
-<link rel="icon" href="../assets/favicon-32.png?v=1f6ba21c" sizes="32x32" type="image/png">
-<link rel="icon" href="../assets/logo-192.png?v=1f6ba21c" sizes="192x192" type="image/png">
-<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=1f6ba21c">
+<link rel="icon" href="../assets/favicon-32.png?v=2c8b6ae2" sizes="32x32" type="image/png">
+<link rel="icon" href="../assets/logo-192.png?v=2c8b6ae2" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=2c8b6ae2">
 <meta property="og:image" content="https://robruntools.github.io/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="../assets/fonts/big-shoulders-display-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/site.css?v=1f6ba21c">
-<script src="../assets/site.js?v=1f6ba21c"></script>
+<link rel="stylesheet" href="../assets/site.css?v=2c8b6ae2">
+<script src="../assets/site.js?v=2c8b6ae2"></script>
 <style>
 /* Add a run */
 .addbar { padding: 22px; display: grid; gap: 14px; }
@@ -136,7 +136,7 @@ tfoot td:first-child { color: var(--receipt); }
 <body>
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="../" aria-label="ROB RUN Tools home"><img class="brand-mark" src="../assets/logo-96.png?v=1f6ba21c" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
+    <a class="brand" href="../" aria-label="ROB RUN Tools home"><img class="brand-mark" src="../assets/logo-96.png?v=2c8b6ae2" width="34" height="34" alt=""><b>ROB RUN</b><small>Tools</small></a>
     <nav class="nav-links" aria-label="Main">
       <a href="../" class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h4.8v-5.6h3.4V20h4.8V9.8"/></svg><span>Home</span></a>
       <a href="../split/" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12V3.5M12 12l7.36 4.25M12 12l-7.36 4.25"/></svg><span>Split</span></a>
@@ -312,7 +312,7 @@ tfoot td:first-child { color: var(--receipt); }
 <footer class="foot">
   <div class="foot-in">
     <p>Your runs are saved on this device only.</p>
-    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 21, 2026. <a href="../faq/#sources">Sources</a></p>
+    <p>Fan-made, not affiliated with ROB RUN or Kefir. Data checked November 22, 2026. <a href="../faq/#sources">Sources</a></p>
   </div>
 </footer>
 
@@ -475,7 +475,7 @@ tfoot td:first-child { color: var(--receipt); }
     el.wipeAlert.hidden = !before.length;
     if (before.length) {
       var all = before.length === state.runs.length;
-      el.wipeAlertText.textContent = "Your server wiped " + RR.whenSaid(g.last) + ". " +
+      el.wipeAlertText.textContent = "Your server was raided " + RR.whenSaid(g.last) + ". " +
         (all ? (before.length === 1 ? "The run here is" : "All " + before.length + " runs here are") : before.length + " of these runs are") + " from before that.";
     }
     return { g: g, before: before };
@@ -510,6 +510,15 @@ tfoot td:first-child { color: var(--receipt); }
     label.style.transform = pct > 75 ? "translateX(-100%)" : (pct < 15 ? "none" : "translateX(-50%)");
   }
 
+  // Stat values give a small nudge when they change, so you can see what your last action moved
+  var rendered = false;
+  function setStat(node, html, key) {
+    if (node._k === key) return;
+    node.innerHTML = html;
+    if (rendered && node._k !== undefined && window.RR) RR.tick(node);
+    node._k = key;
+  }
+
   function render() {
     var c = compute(state);
 
@@ -524,17 +533,22 @@ tfoot td:first-child { color: var(--receipt); }
     else if (state.pay > 0 && c.total >= state.pay) { el.status.textContent = "Paid back"; el.status.className = "tag good"; }
     else { el.status.textContent = Math.floor(pctGoal) + "% of goal"; el.status.className = "tag accent"; }
 
-    el.runCount.innerHTML = c.n + "<small></small>";
-    el.avgCut.textContent = c.n ? fmt.format(c.avg) : "–";
-    el.bestRun.innerHTML = c.n ? fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? "<small>" + esc(c.rows[c.bestIdx].run.type) + "</small>" : "") : "–";
-    el.perHour.innerHTML = c.perHour ? fmt.format(c.perHour.rate) + "<small></small>" : "–";
+    setStat(el.runCount, c.n + "<small></small>", String(c.n));
+    var avgTxt = c.n ? fmt.format(c.avg) : "–";
+    setStat(el.avgCut, avgTxt, avgTxt);
+    var bestHtml = c.n ? fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? "<small>" + esc(c.rows[c.bestIdx].run.type) + "</small>" : "") : "–";
+    setStat(el.bestRun, bestHtml, bestHtml);
+    var phTxt = c.perHour ? fmt.format(c.perHour.rate) : "–";
+    setStat(el.perHour, c.perHour ? phTxt + "<small></small>" : "–", phTxt);
 
-    el.leftGoal.textContent = c.leftGoal === 0 ? "Done" : fmt.format(c.leftGoal);
+    var lgTxt = c.leftGoal === 0 ? "Done" : fmt.format(c.leftGoal);
+    setStat(el.leftGoal, lgTxt, lgTxt);
     el.leftGoal.classList.toggle("ok", c.leftGoal === 0);
     el.payStat.hidden = !(state.pay > 0);
     el.leftPay.textContent = c.leftPay === 0 && c.n ? "Covered" : fmt.format(c.leftPay);
     el.leftPay.classList.toggle("ok", c.leftPay === 0 && c.n > 0);
-    el.runsLeft.textContent = c.runsLeft === 0 ? "None" : (c.runsLeft == null ? "–" : "~" + c.runsLeft);
+    var rlTxt = c.runsLeft === 0 ? "None" : (c.runsLeft == null ? "–" : "~" + c.runsLeft);
+    setStat(el.runsLeft, rlTxt, rlTxt);
 
     var scale = Math.max(state.goal, state.pay, 1);
     el.fill.style.width = Math.min(100, (c.total / scale) * 100) + "%";
@@ -611,6 +625,7 @@ tfoot td:first-child { color: var(--receipt); }
     lastC = c;
     liveBits();
     wipeCheck();
+    rendered = true;
   }
 
   function updateEach() {
@@ -701,10 +716,19 @@ tfoot td:first-child { color: var(--receipt); }
     if (!btn) return;
     var id = Number(btn.getAttribute("data-id"));
     var idx = state.runs.findIndex(function (r) { return r.id === id; });
-    if (idx < 0) return;
-    lastRemoved = { run: state.runs[idx], index: idx };
-    state.runs.splice(idx, 1);
-    save(); render();
+    if (idx < 0 || btn.disabled) return;
+    btn.disabled = true;
+    function drop() {
+      var i = state.runs.findIndex(function (r) { return r.id === id; });
+      if (i < 0) return;
+      lastRemoved = { run: state.runs[i], index: i };
+      state.runs.splice(i, 1);
+      save(); render();
+    }
+    var tr = btn.closest("tr");
+    if (tr && tr.animate && !(window.RR && RR.reduceMotion)) {
+      tr.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateX(16px)" }], { duration: 190, easing: "ease-in", fill: "forwards" }).onfinish = drop;
+    } else drop();
   });
   el.undoBtn.addEventListener("click", function () {
     if (!lastRemoved) return;
@@ -762,13 +786,13 @@ tfoot td:first-child { color: var(--receipt); }
   function summaryText() {
     var c = compute(state);
     var lines = ["**ROB RUN split** (" + c.n + (c.n === 1 ? " run" : " runs") + " this wipe)"];
-    lines.push("My cut: " + fmt.format(c.total) + (c.n ? " · avg " + fmt.format(c.avg) + " a run" : ""));
+    lines.push("My cut: " + fmt.format(c.total) + (c.n ? " (avg " + fmt.format(c.avg) + " a run)" : ""));
     if (c.perHour) lines.push("Pace: " + fmt.format(c.perHour.rate) + " an hour");
     if (c.n > 1) lines.push("Best run: " + fmt.format(c.bestCut) + (c.rows[c.bestIdx].run.type ? " (" + c.rows[c.bestIdx].run.type + ")" : ""));
     lines.push("Goal " + fmt.format(state.goal) + ": " + (c.leftGoal === 0 ? "done" + (c.total > state.goal ? " (+" + fmt.format(c.total - state.goal) + ")" : "") : fmt.format(c.leftGoal) + " to go"));
     if (state.pay > 0) lines.push("Pay back " + fmt.format(state.pay) + ": " + (c.leftPay === 0 ? "covered" : fmt.format(c.leftPay) + " to go"));
     var g = window.RR && RR.wipe ? RR.wipe.get() : null;
-    if (g) lines.push("Federal Raid in " + RR.fmtLeft(g.left));
+    if (g && !g.raided) lines.push("Federal Raid in " + RR.fmtLeft(g.left));
     return lines.join("\n");
   }
   el.copyBtn.addEventListener("click", function () {

@@ -372,6 +372,19 @@ input[type="checkbox"] { accent-color: var(--sodium); }
 }
 .seg button:hover { color: var(--receipt); }
 .seg button[aria-pressed="true"] { background: var(--sodium); color: var(--on-sodium); }
+.seg { position: relative; }
+.seg button { position: relative; z-index: 1; }
+.seg-thumb, .jump-thumb {
+  position: absolute; left: 0; top: 0; z-index: 0; pointer-events: none; opacity: 0;
+  background: var(--sodium);
+  transition: transform 300ms var(--ease), width 300ms var(--ease), height 300ms var(--ease), opacity 160ms ease;
+}
+.seg-thumb { border-radius: var(--r-sm); }
+.jump-thumb { border-radius: 999px; transition-duration: 380ms, 380ms, 380ms, 160ms; }
+.thumb-on > .seg-thumb, .thumb-on > .jump-thumb { opacity: 1; }
+.seg.thumb-on button[aria-pressed="true"] { background: transparent; }
+.jump a { position: relative; z-index: 1; }
+.jump.thumb-on a[aria-current="true"] { background: transparent; border-color: transparent; }
 
 /* ---------- Tables ---------- */
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -498,7 +511,9 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
   font-family: var(--font-display); font-weight: 800; line-height: 0.86; letter-spacing: -0.005em;
   font-size: clamp(50px, 8.4vw, 100px); font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 6px;
 }
-.clock-time b { font-weight: 800; transition: color 400ms ease; }
+.clock-time b { display: inline-block; font-weight: 800; transition: color 400ms ease; }
+.clock-time .roll { animation: roll 420ms cubic-bezier(0.2, 0.8, 0.3, 1); }
+@keyframes roll { from { transform: translateY(-0.22em); opacity: 0.25; } }
 .clock-time i { font-style: normal; font-weight: 700; font-size: 0.4em; color: var(--smoke); margin: 0 0.34em 0 0.05em; }
 .clock-time i:last-child { margin-right: 0; }
 .clock-fuse { position: relative; height: 10px; margin: 12px 6px 0 0; border-radius: 99px; background: var(--pier-3); }
@@ -521,6 +536,7 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 .clock.soon .spark { background: #ffd2cc; box-shadow: 0 0 0 3px rgba(240, 107, 94, 0.32), 0 0 18px 5px rgba(240, 107, 94, 0.55); }
 .clock.soon .clock-msg { background: var(--siren-soft); color: #ffd9d4; }
 .clock.urgent .spark { animation-duration: 0.45s; }
+.clock-raided { font-family: var(--font-display); font-weight: 800; font-size: clamp(50px, 8.4vw, 100px); line-height: 0.86; color: var(--siren); margin-top: 6px; }
 .clock-ask { font-family: var(--font-display); font-weight: 800; font-size: clamp(36px, 5vw, 50px); line-height: 0.95; }
 .clock-sub { margin: 0; color: var(--smoke); max-width: 54ch; }
 .clock-setter { margin-top: 6px; }
@@ -538,6 +554,10 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 .dhm input { height: 50px; font-size: 22px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
 .set-acts { display: flex; flex-wrap: wrap; gap: 10px; }
 .setter .seg { justify-self: start; max-width: 100%; }
+@media (max-width: 480px) {
+  .set-mode { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-self: stretch; }
+  .set-mode button { height: auto; min-height: 38px; padding: 6px 6px; white-space: normal; line-height: 1.15; font-size: 13.5px; }
+}
 
 .sheet {
   width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
@@ -547,6 +567,8 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 .sheet::backdrop { background: rgba(8, 15, 20, 0.7); }
 .sheet[open] { animation: sheet-in 260ms var(--ease); }
 @keyframes sheet-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } }
+.sheet[open]::backdrop { animation: fade-in 220ms ease; }
+@keyframes fade-in { from { opacity: 0; } }
 .sheet-sub { margin: 8px 0 18px; color: var(--smoke); }
 
 .wipe-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 16px; font-size: 15px; color: var(--smoke); }
@@ -594,7 +616,9 @@ details.acc[open] > summary .chev { transform: rotate(180deg); color: var(--sodi
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
 @keyframes flash { 0% { background-color: rgba(249, 161, 27, 0.24); } 100% { background-color: transparent; } }
 @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes tick { from { transform: translateY(5px); opacity: 0.35; } }
 .flash { animation: flash 1.6s ease-out; }
+.tick { animation: tick 360ms var(--ease); }
 .pop { animation: pop 320ms var(--ease); }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
